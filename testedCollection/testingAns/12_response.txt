@@ -1,0 +1,13 @@
+Primary improvement: Demonstration of high-performance short-channel field-effect transistors (FETs) using bottom-up synthesized 9-atom wide armchair graphene nanoribbons (9AGNRs).  High on-current (Ion > 1 μA at Vd = −1 V) and high Ion/Ioff ~ 105 at room temperature were achieved.
+
+Specific problem: Previous bottom-up synthesized GNRs had wide band gaps and short lengths, hindering the fabrication of high-performance FETs.
+
+Approach:  The authors synthesized 9AGNRs and 13AGNRs using a bottom-up chemical approach. They fabricated short-channel FET devices with these GNRs as the channel material and used a thin, high-κ gate dielectric (HfO2) to improve performance.  Ionic liquid gating was also explored.
+
+Materials: 9AGNRs and 13AGNRs were synthesized on Au(111) substrates under ultra-high vacuum conditions.  The GNRs were transferred to SiO2 and HfO2 dielectric substrates.  Pd source-drain electrodes were patterned using e-beam lithography.  A thin HfO2 gate dielectric with an effective oxide thickness of ~1.5 nm was used.  Ionic liquid (DEME-TFSI) was also used for gating experiments. While the individual processes are not novel, the combination of bottom-up synthesized 9AGNRs with a short channel length and a thin, high-κ HfO2 gate dielectric in an FET architecture is a novel approach.  The use of ionic liquid gating with these GNR FETs is also novel.
+
+Key findings/results:  9AGNR FETs with a thin HfO2 gate dielectric achieved Ion > 1 μA at Vd = −1 V and Ion/Ioff ~ 105 at room temperature.  Device performance was limited by tunneling through the Schottky barrier at the Pd-GNR contacts.  The transparency of the Schottky barrier was increased by increasing the gate field near the contacts using a thin, high-κ dielectric.  Ionic liquid gating also enhanced on-current.
+
+Metrics: On-current (Ion), Ion/Ioff ratio, subthreshold swing (SS).
+
+Advantages: The use of bottom-up synthesized GNRs offers atomically precise width and edge structure, leading to improved device homogeneity compared to top-down fabricated GNRs. The short channel length (~20 nm) combined with the thin high-κ dielectric enables high performance.

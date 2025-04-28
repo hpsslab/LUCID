@@ -1,0 +1,15 @@
+Primary Improvement: Demonstrates a polymer-free transfer method for graphene nanoribbons (GNRs) that preserves their quality and enables characterization on various substrates, paving the way for device integration.
+
+Specific problem: Addresses the challenges of GNR processing and characterization, particularly substrate transfer, long-term stability, and ex situ analysis, which are crucial for exploiting GNR properties in applications.
+
+Approach: Employs a polymer-free transfer method involving floating GNR/Au(111)/mica on HCl, cleaving the mica, attaching the GNR/Au film to a target substrate, and etching the Au. Characterizes transferred GNRs using AFM, Raman spectroscopy, and UV-vis spectroscopy.
+
+Materials: 7- and 9-atom-wide armchair GNRs (7-AGNR and 9-AGNR) are grown on Au(111)/mica using a high-throughput UHV system. GNRs are transferred to SiO2/Si, Al2O3, CaF2, and TEM grids. The polymer-free transfer method is a novel aspect of the fabrication process. No novel materials are introduced.
+
+Key Findings/Results: Polymer-free transfer yields uniform, large-area GNR films with few defects. Transferred GNRs exhibit remarkable stability under ambient conditions over 24 months. Multiwavelength Raman spectroscopy confirms nondispersive behavior of GNR Raman modes. UV-vis spectroscopy reveals strong absorption bands for both 7- and 9-AGNRs, consistent with theoretical predictions.
+
+Metrics: Raman peak positions, full width at half maximum (FWHM) of Raman peaks, UV-vis absorption spectra.
+
+Advantages: The polymer-free transfer method avoids polymer residue contamination, resulting in cleaner GNRs and improved film morphology compared to polymer-assisted transfer.
+
+

@@ -1,0 +1,15 @@
+Primary improvement: Demonstrates a polymer-free transfer method for graphene nanoribbons (GNRs) that preserves their quality and enables characterization on various substrates.  The study also provides detailed characterization of the transferred GNRs, including long-term stability and optical properties.
+
+Specific problem addressed:  The difficulty in processing and characterizing GNRs after synthesis, particularly the transfer to other substrates without compromising their structure and properties, and the lack of detailed characterization of transferred GNRs.
+
+Approach/Methodology:  A polymer-free transfer method was used, involving floating the GNRs/Au/mica on HCl, cleaving the mica, attaching the GNRs/Au to a target substrate, and etching the Au. Transferred GNRs were characterized using AFM, Raman spectroscopy, and UV-vis spectroscopy.
+
+Materials and fabrication techniques: 7- and 9-atom-wide armchair GNRs (7-AGNR and 9-AGNR) were synthesized on Au(111)/mica using ultra-high vacuum (UHV) techniques and surface-assisted coupling of molecular precursors.  Target substrates included Al2O3, CaF2, SiO2/Si, and TEM grids.  A potassium iodide-based gold etchant was used.
+
+Key findings/results: The polymer-free transfer method resulted in uniform, large-area GNR films with few tears and wrinkles.  Raman spectroscopy confirmed that the GNRs remained structurally intact after transfer and exhibited remarkable stability under ambient conditions over 24 months. Multiwavelength Raman spectroscopy showed nondispersive behavior of the D mode, indicating the absence of disorder-induced scattering. UV-vis spectroscopy revealed strong absorption bands for both 7- and 9-AGNRs, consistent with theoretical predictions.
+
+Main performance metrics:  Raman peak positions (C-H, D, G, RBLM), Raman peak widths (FWHM), UV-vis absorption spectra.  Long-term stability was assessed by comparing Raman spectra over a 24-month period.
+
+Advantages/benefits: The polymer-free transfer method avoids residual polymer contamination, resulting in cleaner GNRs compared to polymer-assisted transfer. This enables more accurate characterization of intrinsic GNR properties and facilitates integration into devices. The study also demonstrates the long-term stability of GNRs under ambient conditions, which is crucial for practical applications.
+
+Novel fabrication processes/materials: The polymer-free transfer method is a key innovation presented in the paper. No novel materials were introduced.

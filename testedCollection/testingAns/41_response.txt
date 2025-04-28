@@ -1,0 +1,14 @@
+Primary improvement: Demonstration of ultraclean Ohmic van der Waals contact between indium (In) and molybdenum disulfide (MoS2), clarifying the atomistic origins of its Ohmic-like transport properties.  Achieved by low-temperature deposition of In.
+
+Specific problem:  Creating reliable Ohmic contact between metals and TMDCs, which is challenging due to the Fermi-level pinning effect.  Specifically, clarifying the origin of low contact resistance in In-MoS2 contacts.
+
+Approach:  Fabricated In/MoS2 contacts with a cooled substrate holder during In deposition. Characterized the interface with TEM, Raman spectroscopy, and electrical transport measurements. Performed DFT calculations to understand the atomistic mechanisms.
+
+Materials:  Few-layer and monolayer MoS2 flakes on h-BN flakes deposited on SiO2/Si substrates.  In electrodes deposited via thermal evaporation with a cooled substrate holder (~100 K).  Au/MoS2 contacts fabricated for comparison. The key novelty lies in the cooled substrate holder during In deposition, leading to an ultraclean van der Waals interface.  No novel materials are introduced.
+
+Key findings/results: Atomically clean In/MoS2 interface achieved with minimal metal-induced defects. Small interfacial charge transfer between In and MoS2. Ohmic-like transport behavior observed over a wide temperature range (2.4 K - 300 K), attributed to field emission. Low contact resistance achieved (~600 Ω μm for few-layer MoS2 and ~1000 Ω μm for monolayer MoS2 at cryogenic temperatures). DFT calculations reveal large in-gap states due to In-MoS2 hybridization, facilitating Ohmic charge injection.
+
+Metrics: Contact resistance, Schottky barrier height, field-effect mobility, sheet resistance, on/off ratio, specific contact resistivity.
+
+Advantages:  Lower contact resistance compared to traditional metal contacts, achieved through an ultraclean van der Waals interface and field-emission-dominated transport.  Reduced Fermi-level pinning due to minimal charge transfer.
+

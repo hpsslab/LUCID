@@ -1,0 +1,23 @@
+Primary improvement: Demonstrates the bottom-up synthesis and characterization of a 1D Kondo spin chain in nitrogen core-doped chevron-type graphene nanoribbons (N2-cGNRs) on Au(111).
+
+Specific problem addressed: Designing 1D spin systems in bottom-up synthesized GNRs to explore spin physics and potential spintronic applications.
+
+Methodology: On-surface synthesis of N2-cGNRs followed by characterization using scanning tunneling microscopy (STM), scanning tunneling spectroscopy (STS), and density functional theory (DFT) calculations.
+
+Materials and fabrication techniques:
+Precursor molecule: 11,16-dibromo-1,8-diphenyltetrabenzo[a,c,h,j]phenazine.
+Substrate: Au(111).
+Fabrication: Surface-assisted radical step-growth polymerization and thermal cyclodehydrogenation in ultrahigh vacuum (UHV).
+
+Key findings:
+Nitrogen core doping introduces a pair of low-lying occupied states within the semiconducting gap of cGNRs.
+Charge transfer between N2-cGNRs and the Au substrate creates a 1D chain of radical cations.
+A Kondo resonance is observed at zero bias, indicating interaction between localized spins and itinerant electrons in the Au substrate.
+STM tip lift-off experiments reveal exchange coupling between neighboring spin centers (Jeff = 5 meV).
+DFT calculations support the presence of magnetic moments and predict a ferromagnetic ground state for isolated, charged N2-cGNRs.
+
+Main performance metrics: Kondo resonance width (ΓF), exchange coupling strength (Jeff), and band gap (ΔELSDA).
+
+Advantages over existing technologies: Offers a bottom-up approach for creating precisely defined 1D spin chains in GNRs with controlled doping and magnetic interactions.
+
+Novel fabrication processes, modifications, or materials: The use of nitrogen core doping to create a spin imbalance and the STM tip lift-off method to probe intraribbon spin coupling are novel aspects of this work.

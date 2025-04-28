@@ -1,0 +1,129 @@
+{
+  "hydrazine modulation": {
+    "advantages": [
+      "compatibility with SWCNT network FETs",
+      "simple fabrication process",
+      "adjustable doping level",
+      "reversibility"
+    ],
+    "approach": "hydrazine doping method",
+    "materials": [
+      "hydrazine",
+      "SWCNT network films",
+      "Si/SiO2 substrates",
+      "Cr/Au"
+    ],
+    "metrics": [
+      "on-current",
+      "threshold voltage",
+      "field-effect mobility",
+      "on/off ratio"
+    ],
+    "problem": "controllable n-type doping in SWCNT network FETs",
+    "processes": [
+      "drop-casting method"
+    ]
+  },
+  "n-type doping": {
+    "advantages": [
+      "Silicon CMOS compatible",
+      "Air-stable",
+      "Tunable",
+      "Robust"
+    ],
+    "approach": "electrostatic doping technique",
+    "materials": [
+      "carbon nanotubes",
+      "hafnium oxide (HfOX)",
+      "titanium",
+      "platinum"
+    ],
+    "metrics": [
+      "Drive current (ION)",
+      "ON/OFF current ratio (ION/IOFF)",
+      "Subthreshold swing",
+      "Threshold voltage (VT)",
+      "Gate leakage"
+    ],
+    "problem": "reliably doping CNTs to form NMOS CNFETs",
+    "processes": [
+      "atomic layer deposition (ALD)"
+    ]
+  },
+  "silicon nitride": {
+    "advantages": [
+      "high air-stability compared to previous charge-transfer doping methods",
+      "high uniformity across devices",
+      "compatibility with both single nanotube and nanotube network transistors",
+      "CMOS compatibility demonstrated by a proof-of-concept inverter"
+    ],
+    "approach": "SiNx field-effect doping",
+    "materials": [
+      "silicon nitride (SiNx) thin film",
+      "semiconductor-enriched single-walled carbon nanotubes (SWCNTs)",
+      "p-doped silicon substrate",
+      "thermal silicon dioxide (SiO2)",
+      "Ti/Pd thin films"
+    ],
+    "metrics": [
+      "electron mobility",
+      "threshold voltage",
+      "ON/OFF current ratio"
+    ],
+    "problem": "creating stable and robust n-type carbon nanotube transistors",
+    "processes": [
+      "plasma-enhanced chemical vapor deposition (PECVD)"
+    ]
+  },
+  "contact engineering": {
+    "advantages": [
+      "reduced damage to the GNR structure during deposition",
+      "more favorable Ohmic-like contact",
+      "less device-to-device variation"
+    ],
+    "approach": "use of In as a softer contact metal for GNRFETs",
+    "materials": [
+      "indium (In)",
+      "gold (Au)",
+      "palladium (Pd)",
+      "graphene nanoribbons (GNRs)"
+    ],
+    "metrics": [
+      "on-current (Ion)",
+      "on/off ratio (Ion/Ioff)",
+      "subthreshold swing (SSmin)",
+      "nonlinearity of the output characteristics"
+    ],
+    "problem": "achieving low-resistance contacts in GNRFETs",
+    "processes": [
+      "electron-beam deposition",
+      "Raman spectroscopy",
+      "optical absorption calculations",
+      "statistical analysis of STM images"
+    ]
+  },
+  "reduction-controlled viologen": {
+    "advantages": [
+      "long-term stability in ambient conditions and water"
+    ],
+    "approach": "n-type doping of carbon nanotubes using viologen molecules",
+    "materials": [
+      "viologen molecules",
+      "sodium borohydride",
+      "toluene",
+      "water",
+      "carbon nanotube thin-film transistors",
+      "SiO2 substrates",
+      "Ti/Au source and drain electrodes"
+    ],
+    "metrics": [
+      "on/off ratio",
+      "stability of the transistor in ambient conditions and water"
+    ],
+    "problem": "creating stable n-type carbon nanotube transistors",
+    "processes": [
+      "biphasic solution extraction",
+      "plasma-assisted chemical vapor deposition"
+    ]
+  }
+}

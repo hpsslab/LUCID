@@ -1,0 +1,15 @@
+The primary improvement of this paper is the demonstration that indium (In) can be used as an alternative contact metal to palladium (Pd) for improving the performance of graphene nanoribbon field-effect transistors (GNRFETs).
+
+This paper aims to address the challenge of achieving low-resistance contacts in GNRFETs, which is crucial for their performance but difficult due to the sensitive nature of GNRs to metal deposition.
+
+The authors used a combined approach of materials characterization and device fabrication/testing. They first investigated the impact of Pd and In deposition on the structural properties of GNRs using Raman spectroscopy and optical absorption calculations. Then, they fabricated GNRFETs with both Pd and In contacts and compared their electrical performance.
+
+The study used bottom-up synthesized nine-atom wide armchair graphene nanoribbons (9-AGNRs) transferred onto SiO2/Si chips with pre-patterned back-gate structures. The contacts were fabricated using electron-beam deposition of either Pd or In/Au.
+
+The key findings are: (1) In deposition causes less structural damage to 9-AGNRs compared to Pd deposition, as evidenced by Raman spectroscopy. (2) GNRFETs with In contacts exhibit a more linear output characteristic compared to Pd contact devices, indicating a more Ohmic-like contact. (3) Despite the improved contact, the overall device performance of In and Pd contact devices is similar, suggesting that the performance is limited by the GNR channel itself. (4) Statistical analysis of STM images revealed a high density of "bite defects" in the GNRs, which likely limit the charge transport and overall device performance.
+
+The main performance metrics evaluated were the on-current (Ion), on/off ratio (Ion/Ioff), subthreshold swing (SSmin), and nonlinearity of the output characteristics.
+
+The proposed solution of using In contacts offers advantages over existing Pd contact technology in terms of reduced damage to the GNR structure during deposition, leading to a more favorable Ohmic-like contact. Additionally, In contact devices showed less device-to-device variation.
+
+While the paper doesn't introduce novel fabrication processes or materials, it explores the use of In as a softer contact metal for GNRFETs, which is a novel approach in this field. The study highlights the importance of contact engineering and material quality for improving GNRFET performance.

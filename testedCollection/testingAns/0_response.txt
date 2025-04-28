@@ -1,0 +1,13 @@
+Primary improvement: Demonstrates that encapsulating 9-atom-wide armchair graphene nanoribbon field-effect transistors (9-AGNRFETs) with a thin aluminum oxide (Al2O3) layer enhances their long-term stability and reliability by preventing contact degradation.
+
+Specific problem: The long-term stability and reliability of GNRFETs, crucial for practical applications, remain largely unexplored.  This paper addresses the performance degradation of 9-AGNRFETs over consecutive logic cycles.
+
+Approach: The authors fabricated 9-AGNRFETs and subjected them to repeated full cycles of gate voltage sweeps while monitoring the on-state current (ION).  They then deposited a thin Al2O3 layer on the devices using atomic layer deposition (ALD) and repeated the cycling tests to evaluate the impact of encapsulation on device stability.
+
+Materials: 9-AGNRs synthesized on Au(111)/mica using on-surface synthesis with 3,6-diiodo-1,1:2,1-terphenyl (DITP) precursor. GNRs transferred to pre-patterned SiO2/Si chips with W gate and HfO2 dielectric. Pd contacts fabricated using electron beam lithography. Al2O3 deposited using ALD. While ALD is an established technique, the direct application of a thin Al2O3 layer for encapsulating GNRFETs and demonstrating its effectiveness in preventing contact degradation is novel in this context.
+
+Key findings: The ION of unencapsulated 9-AGNRFETs degrades significantly over consecutive logic cycles. Encapsulating the devices with a thin Al2O3 layer prevents performance degradation, enabling stable operation for up to several thousand cycles. The degradation is attributed to contact resistance degradation, likely due to oxidation of the Pd contacts or changes in the dielectric environment near the contact.
+
+Metrics: On-state current (ION), on-off current ratio (ION/IOFF), and subthreshold swing (SS).  Reliability was assessed by tracking ION over thousands of logic cycles.
+
+Advantages: The proposed Al2O3 encapsulation offers a simple and effective solution to enhance the long-term stability and reliability of GNRFETs, paving the way for their integration into practical applications.

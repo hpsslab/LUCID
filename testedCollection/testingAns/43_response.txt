@@ -1,0 +1,14 @@
+Primary improvement: A transfer-free method for synthesizing atomically precise graphene nanoribbons (GNRs) directly on insulating substrates, eliminating the need for transfer processes that can damage the GNRs.  This method also allows for scaling up to 12-inch wafers.
+
+Specific problem: The integration of bottom-up synthesized GNRs into electronic devices requires transferring them from metallic growth substrates to insulating substrates. This transfer process is challenging and can damage the GNRs, hindering the development of GNR-based electronics.
+
+Approach: GNRs are grown on a thin gold film deposited on an insulating substrate (SiO2/Si). The gold film is then gently wet etched, leaving the GNRs settled on the insulator.
+
+Materials: 7-atom wide armchair GNRs (7-AGNRs) were synthesized from 10,10′-dibromo-9,9′-bianthracene (DBBA) precursors on gold thin films deposited on SiO2/Si substrates. Gold etching was performed using a potassium iodide solution.  Electron beam lithography was used to fabricate GNR field-effect transistors (FETs) with Pd source-drain contacts and local HfO2 back gates. The transfer-free GNR synthesis method, involving direct growth on gold thin films followed by wet etching of the gold, is novel.  While other studies have used gold thin films, this study demonstrated the viability of polycrystalline gold thin films on SiO2/Si, as opposed to the more commonly used single-crystal gold substrates.
+
+Key findings/results: Atomically precise 7-AGNRs were successfully grown on Au/SiO2/Si substrates. Raman spectroscopy confirmed that the GNRs remained structurally intact after the gold etching process. Transfer-free fabricated 7-AGNR FETs exhibited on-currents up to ~30 nA and ambipolar behavior.  GNRs grown with this method showed large-scale uniformity across a 2x2 inch sample.
+
+Metrics: On-current (Ion), on/off ratio.
+
+Advantages: Eliminates the need for transferring GNRs, which can damage them and introduce contamination.  Enables large-scale integration of GNRs on wafer sizes up to 12 inches.
+

@@ -1,0 +1,23 @@
+Primary improvement: Synthesis of atomically precise armchair-edged graphene nanoribbons (AGNRs) with a smaller bandgap (0.19 eV) than previously achieved.
+
+Specific problem addressed:  Large bandgaps in previously synthesized AGNRs, leading to high Schottky barriers and large carrier effective masses, hindering device performance.
+
+Approach/Methodology: Bottom-up synthesis of AGNRs using novel dibromobenzene-based precursor monomers with varying widths (17 and 13 carbon atoms). Characterization of atomic and electronic structures using scanning tunneling microscopy/spectroscopy (STM/STS) and non-contact atomic force microscopy (nc-AFM). Comparison with theoretical calculations (GW approximation).
+
+Materials and fabrication techniques:
+Precursors: 1,2-bis(2-anthracenyl)-3,6-dibromobenzene (BADBB) for 17-AGNR and 1,2-bis(2-naphthalenyl)-3,6-dibromobenzene (BNDBB) for 13-AGNR.
+Substrate: Au(111) single crystal or Au(111) epitaxial films on mica.
+Fabrication: Deposition of monomers via thermal sublimation under ultra-high vacuum, followed by stepwise annealing up to 400°C for polymerization and cyclodehydrogenation.
+
+Key findings/results:
+Successful synthesis of 17-AGNRs and 13-AGNRs with confirmed atomic structures.
+17-AGNRs exhibit a bandgap of 0.19 eV on Au(111).
+13-AGNRs exhibit a bandgap of 1.34 eV on Au(111).
+Experimental bandgaps and band dispersions are consistent with theoretically predicted values after correcting for substrate screening.
+17-AGNRs have small electron/hole effective masses (~0.06me).
+
+Main performance metrics: Bandgap, electron/hole effective mass, band dispersion.
+
+Advantages over existing technologies: Smaller bandgap and effective mass compared to previously synthesized AGNRs, promising improved performance in electronic devices. Precise control over GNR structure through bottom-up synthesis.
+
+Novel fabrication processes/materials:  Novel dibromobenzene-based precursor monomers (BADBB and BNDBB) and a stepwise annealing process for improved AGNR quality.

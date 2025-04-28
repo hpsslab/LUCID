@@ -1,0 +1,13 @@
+Primary improvement: This paper introduces a novel in situ silicon intercalation approach to access the frontier states of armchair graphene nanoribbons (AGNRs) grown on metal substrates, overcoming the masking effect of the metal surface.
+
+Specific problem: The electronic properties of graphene nanoribbons grown on metal substrates are significantly masked by the properties of the supporting metal surface, making it difficult to study the intrinsic electronic properties of the GNRs.  This is particularly problematic for narrow band gap GNRs.
+
+Approach: The authors intercalate silicon at the AGNR/Au(111) interface through surface alloying. This creates a gold silicide (AuSIL) buffer layer between the AGNR and the gold substrate, effectively decoupling the GNR electronic states from the metal.  Scanning tunneling spectroscopy (STS) is then used to characterize the electronic properties of the GNRs on the AuSIL.
+
+Materials: 7-AGNR, 9-AGNR, 14-AGNR, 18-AGNR, and 21-AGNR were synthesized on Au(111) substrates using on-surface polymerization and cyclodehydrogenation of precursor molecules. Silicon was then thermally evaporated onto the Au(111) substrate held at 475 K to form the AuSIL layer via intercalation. The in situ silicon intercalation process to form an AuSIL buffer layer at the GNR/metal interface is a novel approach introduced in this paper.
+
+Key findings: Silicon intercalation successfully decouples the AGNR electronic states from the Au(111) substrate, allowing for clear observation of the frontier states and band gaps of various AGNRs. The measured band gaps of the substrate-supported AGNRs are smaller than the calculated values for free-standing AGNRs, demonstrating a width-dependent band gap reduction due to substrate screening. First-principles calculations using an advanced image-charge model support the experimental findings.
+
+Metrics: Band gap is the primary performance metric evaluated in this paper. Valence band maximum (VBM) and conduction band minimum (CBM) positions are determined from STS measurements to calculate the band gap.
+
+Advantages: The proposed in situ silicon intercalation method offers a less destructive alternative to ex situ transfer of GNRs onto insulating substrates. It allows for direct measurement of GNR electronic properties while preserving the integrity of the ribbons.

@@ -1,0 +1,13 @@
+Primary improvement:  Significantly improved hysteresis and reliability in single-layer MoS2 field-effect transistors (FETs).
+
+Specific problem:  Addressing the sizable hysteresis and long-term drifts (bias-temperature instabilities - BTI) observed in MoS2 FETs, which hinder stable device operation.
+
+Approach: Combining chemical vapor deposition (CVD) growth of MoS2 with a high-quality Al2O3 encapsulation layer.  Electrical characterization was performed in vacuum and darkness, including drain current vs. gate voltage measurements, hysteresis analysis with varying sweep directions and frequencies, and BTI stress/recovery tests with increasing stress times.
+
+Materials: CVD-grown single-layer MoS2 on SiO2/p++-Si substrates. 50nm thick gold source/drain contacts. 15nm thick Al2O3 encapsulation layer deposited via atomic layer deposition (ALD) at 300°C.  Use of high-quality CVD-grown MoS2. High-temperature (300°C) ALD of Al2O3 encapsulation layer.
+
+Key findings/results: On/off current ratio of ~10^9. Hysteresis significantly reduced (nearly one order of magnitude compared to bare CVD-grown devices and two orders of magnitude compared to bare exfoliated devices). BTI shifts more than an order of magnitude smaller than previously reported for MoS2 FETs, with near-complete recovery after several hours. PBTI degradation weaker than NBTI.
+
+Metrics: On/off current ratio. Hysteresis width. Threshold voltage shift (due to PBTI and NBTI). Subthreshold swing.
+
+Advantages: Reduced hysteresis. Improved long-term stability (reduced BTI). Higher on/off current ratio.

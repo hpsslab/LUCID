@@ -1,0 +1,15 @@
+The primary improvement of this paper is the demonstration of adjustable and reversible n-type doping of single-wall carbon nanotube (SWCNT) network field effect transistors (FETs) using hydrazine.
+
+The paper aims to address the challenge of achieving controllable n-type doping in SWCNT network FETs, which typically exhibit p-type behavior in ambient conditions.
+
+The authors used a simple drop-casting method to treat SWCNT network FETs with hydrazine solutions of varying concentrations (6.5 wt%, 13 wt%, 19.5 wt%, 26 wt%). They then characterized the electrical properties of the devices before and after treatment.
+
+The study used SWCNT network films deposited on Si/SiO2 substrates with Cr/Au (10/50 nm) source/drain electrodes. Hydrazine solutions were prepared by diluting a concentrated N2H4·H2O solution.
+
+Key findings include: (1) Hydrazine effectively n-dopes SWCNT network FETs, enabling the modulation of their transport behavior from p-type to n-type. (2) The degree of n-doping is adjustable by varying the concentration of the hydrazine solution. (3) The hydrazine doping effect is reversible, as the original p-type state can be restored by cleaning the devices with deionized water.
+
+The main performance metrics evaluated in the paper include on-current, threshold voltage, field-effect mobility, and on/off ratio.
+
+The proposed hydrazine doping method offers advantages over existing technologies, such as compatibility with SWCNT network FETs, simple fabrication process, adjustable doping level, and reversibility.
+
+The paper introduces a novel application of hydrazine as an adjustable and reversible n-type dopant for SWCNT network FETs. No novel fabrication processes, modifications, or materials are presented. 

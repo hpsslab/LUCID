@@ -1,0 +1,15 @@
+digraph G {
+
+    problem [label=problem]
+    approach [label=approach]
+    mat [label=materials]
+    metric[label=metrics]
+    adv[label=advantage]
+    process[label=processes]
+    
+    approach -> problem [label=solves]
+    approach -> metric [label=evaluates]
+    approach -> adv [label=offers]
+    mat -> approach [label="used in"]
+    process -> approach [label="used in"]
+}
