@@ -1,0 +1,8 @@
+COMPETENCY_QUESTIONS : list[str] = ['What is the primary improvement of this paper to the field?',
+                                    'What specific problem or challenge does this paper aim to address?',
+                                    'What approach or methodology did the authors use to tackle the problem?',
+                                    'What materials and fabrication techniques were used in the study?',
+                                    'What are the key findings or results presented in the paper?',
+                                    'What are the main performance metrics (e.g., mobility, ON/OFF ratio, subthreshold swing, reliability) evaluated in this paper?',
+                                    'What advantages or benefits does the proposed solution offer over existing technologies?',
+                                    'Are there any novel fabrication processes, modifications, or materials introduced in this paper?']
