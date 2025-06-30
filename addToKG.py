@@ -1,7 +1,8 @@
 from pathlib import Path
 from qa import answerCQs
-from extensionError import ExtensionError
-from snoError import ShouldNotOccurError
+from exceptions.extensionError import ExtensionError
+from exceptions.duplicateError import DuplicateError
+from exceptions.snoError import ShouldNotOccurError
 from argparse import ArgumentParser, Namespace
 
 def addPathsToKG(pathList : list[Path]) -> None:
@@ -32,6 +33,10 @@ def addPathToKG(path: Path) -> None:
         
         except ExtensionError as e:
             ''' Certain filetypes aren't added to the KG. For now, only pdf files are supported. TODO: add other filetype functionality later? '''
+            print(f"{e}. Skipping {path.name} and moving on.")
+
+        except DuplicateError as e:
+            ''' Don't allow files to be added into the KG multiple times. '''
             print(f"{e}. Skipping {path.name} and moving on.")
             
     elif path.is_dir():

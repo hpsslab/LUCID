@@ -2,17 +2,18 @@ import pymupdf
 import gemini
 import cq
 from xxhash import xxh128
-from extensionError import ExtensionError
-from snoError import ShouldNotOccurError
+from exceptions.extensionError import ExtensionError
+from exceptions.duplicateError import DuplicateError
+from exceptions.snoError import ShouldNotOccurError
 from pathlib import Path
 
-def answerCQsInPath(documentPath : Path, dbPath : Path = Path("kgContents.txt"), questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> list[str]:
+def answerCQsInPath(documentPaths : list[Path], dbPath : Path = Path("kgContents.txt"), questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> list[str]:
     ''' Takes in a list of paths to articles that need answered CQs and returns a list containing the answers for each document. '''
     
     cqAnswers : list[str] = []
     
     ''' Loop through paths and answer CQs ''' 
-    for path in pathList:
+    for path in documentPaths:
         try:
             if path.is_file():
                 ''' Base Case: answer the CQs for the file. '''
@@ -38,9 +39,14 @@ def answerCQsInPath(documentPath : Path, dbPath : Path = Path("kgContents.txt"),
             ''' Certain filetypes aren't added to the KG. For now, only pdf files are supported. TODO: add other filetype functionality later? '''
             print(f"{e}. Skipping {path.name} and moving on.")
 
+        except DuplicateError as e:
+            ''' Don't allow files to be added into the KG multiple times. '''
+            print(f"{e}. Skipping {path.name} and moving on.")
+
         except ShouldNotOccurError as e:
             ''' Used when the function reaches a code block that it should never reach. '''
             print(f"{e}. Skipping {path.name} and moving on.")
+
 
     return cqAnswers
 
@@ -113,8 +119,7 @@ def answerCQs(documentPath : Path, dbPath : Path = Path("kgContents.txt"), quest
     if documentPath.suffix == ".pdf":
         ''' parse PDF file into text '''
         if isInKG(documentPath, dbPath):
-            print(f"Error: file {documentPath.name} already in the KG. Skipping {documentPath.name} and moving on.")
-            return ""
+            raise DuplicateError(documentPath.name)
 
         else:
             ''' 
@@ -142,6 +147,8 @@ def answerCQs(documentPath : Path, dbPath : Path = Path("kgContents.txt"), quest
             # write to file
             with open(sys.argv[2], 'w') as out:
                 out.write(response)
+
+            return response
             '''
 
             return "Placeholder for future LLM output"
