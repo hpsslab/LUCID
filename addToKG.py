@@ -1,3 +1,4 @@
+from asyncio import run, gather, Lock
 from pathlib import Path
 from qa import answerCQs
 from exceptions.extensionError import ExtensionError
@@ -5,22 +6,16 @@ from exceptions.duplicateError import DuplicateError
 from exceptions.snoError import ShouldNotOccurError
 from argparse import ArgumentParser, Namespace
 
-def addPathsToKG(pathList : list[Path]) -> None:
+async def addPathsToKG(pathList : list[Path]) -> None:
     '''Takes in a list of paths to articles that need to be added into the KG. '''
-    for path in pathList:
-        ''' Add the contents to the KG, checking for errors along the way. '''
-        try:
-            addPathToKG(path)
-        
-        except FileNotFoundError as e:
-            ''' When the file does not exist, just let the user know, skip, and move on. '''
-            print(f"{e}. Skipping {path.name} and moving on.")
+    
+    ''' Make a lock that every asynchronous process can share once we start executing. Can't have race conditions when doing DB ops. '''
+    databaseLock : Lock = Lock()
+    
+    ''' Asynchronously execute the process of adding each path into the knowledge graph, making sure exceptions don't stop the entire execution. '''
+    await gather(*(addPathToKG(path, databaseLock) for path in pathList), return_exceptions = True)
 
-        except ShouldNotOccurError as e:
-            ''' Used when the function reaches a code block that it should never reach. '''
-            print(f"{e}. Skipping {path.name} and moving on.")
-
-def addPathToKG(path: Path) -> None:
+async def addPathToKG(path: Path, lock : Lock) -> None:
     ''' Takes in an individual path and adds the associated article to the KG. '''
     
     if not path.exists():
@@ -29,7 +24,7 @@ def addPathToKG(path: Path) -> None:
     if path.is_file():
         ''' Add article to KG, base case. '''
         try:
-            cqAnswers : str = answerCQs(path)
+            cqAnswers : str = await answerCQs(path, lock)
         
         except ExtensionError as e:
             ''' Certain filetypes aren't added to the KG. For now, only pdf files are supported. TODO: add other filetype functionality later? '''
@@ -43,8 +38,7 @@ def addPathToKG(path: Path) -> None:
         ''' Recursively get to the files if a directory path was provided. '''
         for root, _, files in path.walk():
             ''' NOTE: loop through files only. A loop through directories results in double counting due to how walk works (learned that the hard way). '''
-            for file in files:
-                addPathToKG(root.joinpath(file))
+            await gather(*(addPathToKG(root.joinpath(file), lock) for file in files), return_exceptions = True)
     
     else:
         raise ShouldNotOccurError() 
@@ -67,4 +61,4 @@ if __name__ == "__main__":
 
     arguments : Namespace = parser.parse_args()
 
-    addPathsToKG(arguments.paths)
+    run(addPathsToKG(arguments.paths))

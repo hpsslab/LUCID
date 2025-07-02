@@ -2,8 +2,9 @@ import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import os
 import configparser
+import asyncio
 
-# load prameters from config file
+# load parameters from config file
 config = configparser.ConfigParser()
 config.read('config.cfg')
 temp = float(config['gemini']['Temperature'])
@@ -26,6 +27,23 @@ def generate(input, mime=None, schema=None):
         ),
         safety_settings={
             HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE
-        }
+        },
+        stream = False
+    )
+    return res.text
+
+# send a request to the model and return the text response (asynchronous version)
+async def agenerate(input, mime=None, schema=None):
+    res = await model.generate_content_async(
+        input,
+        generation_config = genai.GenerationConfig(
+            temperature=temp,
+            response_mime_type=mime,
+            response_schema=schema
+        ),
+        safety_settings={
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE
+        },
+        stream = False
     )
     return res.text

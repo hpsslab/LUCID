@@ -1,6 +1,7 @@
 import pymupdf
 import gemini
 import cq
+from asyncio import Lock, sleep
 from xxhash import xxh128
 from exceptions.extensionError import ExtensionError
 from exceptions.duplicateError import DuplicateError
@@ -55,7 +56,8 @@ def isInKG(documentPath : Path, dbPath : Path) -> bool:
     Checks our database (given by dbPath) and checks whether the contents of the documentPath file are already there. 
     Will create the DB if it doesn't exist yet.
     NOTE: implementation is only with a basic txt file rn, so it isn't fancy enough for things like ACID properties or reliable in a shared env.
-    TODO: improve database functionality later?
+    TODO: expand database functionality later outside txt?
+    TODO: imrpove search algorithm (currently a simple linear search on the txt file)
     '''
 
     if not dbPath.exists():
@@ -72,7 +74,6 @@ def isInKG(documentPath : Path, dbPath : Path) -> bool:
         else:
             ''' For now, don't let the program work properly if we get a non txt database passed in. '''
             raise ExtensionError(dbPath.suffix)
-            return True
 
     else:
         if dbPath.suffix == ".txt":
@@ -102,9 +103,8 @@ def isInKG(documentPath : Path, dbPath : Path) -> bool:
         else:
             ''' For now, don't let the program work properly if we get a non txt database passed in. '''
             raise ExtensionError(dbPath.suffix)
-            return True
 
-def answerCQs(documentPath : Path, dbPath : Path = Path("kgContents.txt"), questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> str:
+async def answerCQs(documentPath : Path, lock : Lock, dbPath : Path = Path("kgContents.txt"), questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> str:
     ''' 
     Takes in:
     1. a path to an article 
@@ -117,46 +117,51 @@ def answerCQs(documentPath : Path, dbPath : Path = Path("kgContents.txt"), quest
         raise FileNotFoundError(f"FileNotFoundError: {documentPath.name} does not exist")
 
     if documentPath.suffix == ".pdf":
-        ''' parse PDF file into text '''
-        if isInKG(documentPath, dbPath):
-            raise DuplicateError(documentPath.name)
+        ''' Check whether or not the document is already in the KG. '''
+        ''' Need the lock to check the database and write to database. '''
+        async with lock:
+            if isInKG(documentPath, dbPath):
+                raise DuplicateError(documentPath.name)
 
-        else:
-            ''' 
-            Hash the file and add it to our database to make sure we don't readd the contents into the KG twice. 
-            Shoutout to ChatGPT for the recommendation for a non cryptographic Python hash library and the associated code.
-            '''
-            hash_object : xxh3_128 = xxh128()            
-            with open(documentPath, 'rb') as doc:
-                while chunk := doc.read(2 ** 32):
-                    hash_object.update(chunk)
+            else:
+                ''' 
+                Hash the file and add it to our database to make sure we don't readd the contents into the KG twice. 
+                Shoutout to ChatGPT for the recommendation for a non cryptographic Python hash library and the associated code.
+                '''
+                hash_object : xxh3_128 = xxh128()            
+                with open(documentPath, 'rb') as doc:
+                    while chunk := doc.read(2 ** 32):
+                        hash_object.update(chunk)
 
-            ''' Add hashed file into our DB. '''                
-            with open(dbPath, 'a') as dbFile:
-                dbFile.write(f"\n{hash_object.hexdigest()}")
+                ''' Add hashed file into our DB. '''                
+                with open(dbPath, 'a') as dbFile:
+                    dbFile.write(f"\n{hash_object.hexdigest()}")
         
-            ''' Read PDF into a usable string. '''
-            with pymupdf.open(documentPath) as doc:
-                paper : str = chr(10).join([page.get_text() for page in doc])
+        ''' Read PDF into a usable string. '''
+        with pymupdf.open(documentPath) as doc:
+            paper : str = chr(10).join([page.get_text() for page in doc])
+        
+        print(f"Adding {documentPath.name} to the KG.")
+        await sleep(len(documentPath.name))
+        print(f"Added {documentPath.name} to the KG.")
 
-            '''
-            # build prompt
-            prompt : str = "Answer each of the following questions for the provided paper: \n" + chr(10).join(questionList) + "\nPaper:\n" + paper
-            response : str = gemini.generate(prompt)
+        '''
+        # build prompt
+        prompt : str = "Answer each of the following questions for the provided paper: \n" + chr(10).join(questionList) + "\nPaper:\n" + paper
+        response : str = gemini.generate(prompt)
 
-            # write to file
-            with open(sys.argv[2], 'w') as out:
-                out.write(response)
+        # write to file
+        with open(sys.argv[2], 'w') as out:
+            out.write(response)
 
-            return response
-            '''
+        return response
+        '''
 
-            return "Placeholder for future LLM output"
+        return "Placeholder for future LLM output"
 
     else:
         ''' For now, don't let the program work properly if we get a non pdf document passed in. '''
         raise ExtensionError(documentPath.suffix)
-        return ""
 
 if __name__ == "__main__":
     '''

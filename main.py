@@ -1,3 +1,4 @@
+from asyncio import run
 from sys import exit
 from pathlib import Path
 from argparse import ArgumentParser, _SubParsersAction, Namespace
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     '''
 
     if arguments.option == "add":
-        addPathsToKG(arguments.paths)
+        run(addPathsToKG(arguments.paths))
     
         exit(0)
 
