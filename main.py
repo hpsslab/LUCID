@@ -29,10 +29,25 @@ if __name__ == "__main__":
     '''
 
     add_parser : ArgumentParser = subparsers.add_parser("add")
+
+    '''
+    A parser to decide which LLM to use. Not particularly useful right now since I only allow Gemini for now, but should be helpful down the line.
+    '''
+    add_parser.add_argument('--llm',
+                            type = str,
+                            nargs = '?',
+                            const = None,
+                            default = "gemini",
+                            action = "store",
+                            metavar = "llm",
+                            choices = ["gemini"],
+                            help = "The LLM to use when adding articles to the KG.")
+
     add_parser.add_argument("paths", 
                             type = Path, 
                             nargs = '+', 
-                            action = "extend", metavar = "path", 
+                            action = "extend", 
+                            metavar = "path", 
                             help = "The list of file or folder paths to add to the KG.")
     
     '''
@@ -50,7 +65,7 @@ if __name__ == "__main__":
     '''
 
     if arguments.option == "add":
-        run(addPathsToKG(arguments.paths))
+        run(addPathsToKG(arguments.paths, arguments.llm))
     
         exit(0)
 

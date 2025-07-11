@@ -1,20 +1,25 @@
-import typing_extensions as typing
+from typing import Literal
 
-# response schema
-class Schema(typing.TypedDict):
-    problem: str
-    approach: str
-    materials: list[str]
-    processes: list[str]
-    metrics: list[str]
-    advantages: list[str]
-
-# relations between labels as defined in the ontology
-relations = [
-    "[MATERIALS] are used in this [APPROACH]",
-    "[PROCESSES] are used in this [APPROACH]",
-    "[APPROACH] solves [PROBLEM]",
-    "[APPROACH] evaluates [METRICS]",
-    "[APPROACH] offers [ADVANTAGES]"
+ENTITIES : Literal = Literal[
+        "PROBLEM",
+        "APPROACH",
+        "MATERIAL",
+        "PROCESS",
+        "METRIC",
+        "ADVANTAGE"
 ]
 
+RELATIONS : Literal = Literal[
+        "USED_IN",
+        "SOLVES",
+        "EVALUATES",
+        "OFFERS"
+]
+
+VALIDATION_SCHEMA : list(tuple[str, str, str]) = [
+        ("MATERIAL", "USED_IN", "APPROACH"),
+        ("PROCESS", "USED_IN", "APPROACH"),
+        ("APPROACH", "SOLVES", "PROBLEM"),
+        ("APPROACH", "EVALUATES", "METRIC"),
+        ("APPROACH", "OFFERS", "ADVANTAGE")
+]

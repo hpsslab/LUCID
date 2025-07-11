@@ -1,5 +1,8 @@
 from asyncio import run, gather, Lock
 from pathlib import Path
+from os import environ
+from configparser import ConfigParser
+from schema import ENTITIES, RELATIONS, VALIDATION_SCHEMA
 from qa import answerCQs
 from parse import parseCQAnswers
 from xxhash import xxh128
@@ -7,6 +10,108 @@ from exceptions.extensionError import ExtensionError
 from exceptions.snoError import ShouldNotOccurError
 from exceptions.duplicateError import DuplicateError
 from argparse import ArgumentParser, Namespace
+from llama_index.core import PropertyGraphIndex
+from llama_index.core.indices.property_graph import SchemaLLMPathExtractor
+from llama_index.llms.google_genai import GoogleGenAI
+
+def initializeKG(llmChoice : str) -> any:
+    ''' Create LLM depending on argument. '''
+    llm = None
+    
+    if llmChoice == "gemini":
+        config : ConfigParser = ConfigParser()
+        
+        config.read('config.cfg')
+        
+        '''
+        Use the LlamaIndex LLM constructors to creatae our LLM to construct a KG with. 
+        Parameters:
+            model: which Gemini model should we use?
+            api_key: credentials to use the model.
+            temperature: how much 'freedom' should the model have to vary its output?
+            max_tokens: how many tokens is the limit for model outputs?
+            context_window: the context window of the model.
+            max_retries: how many times should the API retry if an API error takes place?
+            vertexai_config: credentials to use if we want to use via VertexAI (provided a dictionary containing a project id and a location).
+            http_options: HTTP options for the LLM requests. 
+            See https://github.com/googleapis/python-genai/blob/main/google/genai/types.py#L1247 for more.
+            debug_config: options that make it easier to debug (ie: use cached content so that you don't charge for every call).
+            See https://github.com/googleapis/python-genai/blob/main/google/genai/client.py#L89 for more.
+            generation_config: configuration instructions on how to generate the response. Not using for now, change later if model not performing.
+            See https://github.com/googleapis/python-genai/blob/main/google/genai/types.py#L3766 for more.
+            callback_manager: used if we want to manage the asynchronous flow of the program within LlamaIndex.
+            is_function_calling_model: does the model call functions (as tools) as a RAG source?
+            cached_content: a cache object if we want to cache objects that the LLM will use multiple times.
+            The goal here is to provide CQ answers to the model and have the LLM create triplets for a knowledge graph (once per set of CQ answers),
+            so caching won't be necessary for this particular model.
+        '''
+        llm : GoogleGenAI = GoogleGenAI(
+            model = "gemini-2.0-flash",
+            api_key = environ["GEMINI_API_KEY"],
+            temperature = float(config['gemini']['Temperature']),
+            max_tokens = 8192,
+            context_window = 1048576,
+            max_retries = 3,
+            vertexai_config = None,
+            http_options = None, 
+            debug_config = None,
+            generation_config = None,
+            callback_manager = None,
+            is_function_calling_model = False,
+            cached_content = None 
+        )
+
+    else:
+        raise ShouldNotOccurError()
+
+    '''
+    Use the schema that we defined to extract our necessary information to construct the KG.
+    Ask the LLM to extract KG triples from the CQ answers.
+    Parameters:
+        llm: the LLM to prompt to extract the entities and relations from the CQ answers.
+        extract_prompt: the prompt to feed the LLM with to extract everything. 
+        I think the default prompt that the library uses will work fine, but we can add more context to the prompt later if necessary.
+        possible_entities & possible_relations: the entities/relations in our schema.
+        possible_entity_props & possible_relation_props: a list of properties that we would want to extract about a given entity/relation.
+        Leaving as None for now unless we want specific information later (would probably need to alter our approach too).
+        kg_validation_schema: rules defining which entities can pair with which relations.
+        strict: must we stick to this schema or can the LLM define new attributes?
+        num_workers: the amount of parallel jobs we use to do everything.
+        max_triplets_per_chunk: how many KG triplets can we make from each chunk from the document?
+    '''
+    kgExtractor : SchemaLLMPathExtractor = SchemaLLMPathExtractor(
+        llm = llm,
+        extract_prompt = None,            
+        possible_entities = ENTITIES,
+        possible_entity_props = None,
+        possible_relations = RELATIONS,
+        possible_relation_props = None,
+        kg_validation_schema = VALIDATION_SCHEMA,
+        strict = True,
+        num_workers = 4,
+        max_triplets_per_chunk = 10
+    )
+    
+    '''
+    propertyGraph = PropertyGraphIndex(
+        nodes =
+        llm =
+        kg_extractors = [kgExtractor],
+        property_graph_store =
+        vector_store =
+        use_async = True,
+        embed_model =
+        embed_kg_nodes = True,
+        callback_manager =
+        transformations =
+        storage_context =
+        show_progress =
+    )
+
+    print(type(propertyGraph))
+
+    return propertyGraph
+    '''
 
 def hashDocument(documentPath : Path) -> str:
     ''' 
@@ -70,19 +175,27 @@ def isInKG(documentPath : Path, dbPath : Path = Path("kgContents.txt")) -> bool:
             ''' For now, don't let the program work properly if we get a non txt database passed in. '''
             raise ExtensionError(dbPath.suffix, "database")
 
-async def addPathsToKG(pathList : list[Path]) -> None:
+async def addPathsToKG(pathList : list[Path], llmChoice : str) -> None:
     '''Takes in a list of paths to articles that need to be added into the KG. '''
     
     ''' Make a lock that every asynchronous process can share once we start executing. Can't have race conditions when doing DB ops. '''
     databaseLock : Lock = Lock()
     
+    ''' Make our knowledge graph. '''
+    async with databaseLock:
+        try:
+            knowledgeGraph = initializeKG(llmChoice)
+        
+        except KeyError as e:
+            print(f"KeyError: {e} not set.")
+
     ''' Asynchronously execute the process of adding each path into the knowledge graph, making sure exceptions don't stop the entire execution. '''
     await gather(*(addPathToKG(path, databaseLock) for path in pathList), return_exceptions = True)
 
 async def addPathToKG(documentPath: Path, lock : Lock, cqAnswerPath : Path = Path("cq_answers"), parsedPath : Path = Path("parsed_cq_answers")) -> None:
     ''' Takes in an individual path and adds the associated article to the KG. '''
 
-    ''' Make sure passed document exists before anything. '''
+    ''' Make sure passed document exists before anything. Code is definitely ugly, but it'll do for now. '''
     try:
         if not documentPath.exists():
             raise FileNotFoundError(f"FileNotFoundError: {documentPath.name} does not exist")
@@ -167,7 +280,19 @@ if __name__ == "__main__":
                         action = "extend", 
                         metavar = "path", 
                         help = "The list of file or folder paths to add to the KG")
+    '''
+    A parser to decide which LLM to use. Not particularly useful right now since I only allow Gemini for now, but should be helpful down the line.
+    '''
+    parser.add_argument('--llm',
+                        type = str,
+                        nargs = '?',
+                        const = None,
+                        default = "gemini",
+                        action = "store",
+                        metavar = "llm",
+                        choices = ["gemini"],
+                        help = "The LLM to use when adding articles to the KG.")
 
     arguments : Namespace = parser.parse_args()
 
-    run(addPathsToKG(arguments.paths))
+    run(addPathsToKG(arguments.paths, arguments.llm))

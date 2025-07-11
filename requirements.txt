@@ -15,7 +15,8 @@ grpcio-status==1.66.1
 httplib2==0.22.0
 idna==3.10
 langchain==0.3.26
-llama-index-core==0.12.43
+llama-index-core==0.12.48
+llama-index-llms-google-genai==0.2.4
 proto-plus==1.24.0
 protobuf==5.28.1
 pyasn1==0.6.1

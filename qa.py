@@ -1,48 +1,50 @@
 import pymupdf
 import gemini
 import cq
-from asyncio import sleep
+from asyncio import run, gather, sleep
 from exceptions.extensionError import ExtensionError
 from exceptions.snoError import ShouldNotOccurError
 from pathlib import Path
+from argparse import ArgumentParser, Namespace
 
-def answerCQsInPath(documentPaths : list[Path], dbPath : Path = Path("kgContents.txt"), questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> list[str]:
+async def answerCQsInPath(documentPaths : list[Path], cqAnswerPath : Path = Path("cq_answers"), questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> None:
     ''' Takes in a list of paths to articles that need answered CQs and returns a list containing the answers for each document. '''
     
-    cqAnswers : list[str] = []
-    
-    ''' Loop through paths and answer CQs ''' 
-    for path in documentPaths:
-        try:
-            if path.is_file():
-                ''' Base Case: answer the CQs for the file. '''
-                cqAnswer : str = answerCQs(path)
-                cqAnswers.append(cqAnswer)
+    ''' Make answers directory if we don't have it yet. '''
+    if not cqAnswerPath.exists():
+        cqAnswerPath.mkdir()
 
-            elif path.is_dir():
+    ''' Loop through paths and answer CQs ''' 
+    for documentPath in set(documentPaths):
+        try:
+            ''' Make sure passed document exists before anything. Code is definitely ugly, but it'll do for now. '''
+            if not documentPath.exists():
+                raise FileNotFoundError(f"FileNotFoundError: {documentPath.name} does not exist")
+
+            if documentPath.is_file():
+                ''' Base Case: answer the CQs for the file. '''
+                cqAnswer : str = await answerCQs(documentPath)
+
+            elif documentPath.is_dir():
                 ''' Recursively get to the files if a directory path was provided. '''
-                for root, _, files in path.walk():
+                for root, _, files in documentPath.walk():
                     ''' NOTE: loop through files only. A loop through directories results in double counting due to how walk works (learned that the hard way) '''
-                    for file in files:
-                        cqAnswer : str = answerCQs(root.joinpath(file), dbPath, questionList)
-                        cqAnswers.append(cqAnswer)
+                    await gather(*(answerCQs(root.joinpath(file), cqAnswerPath.joinpath(f"{file}_answers.txt")) for file in files), return_exceptions = True)
 
             else:
                 raise ShouldNotOccurError()
 
         except FileNotFoundError as e:
             ''' When the file does not exist, just let the user know, skip, and move on. '''
-            print(f"{e}. Skipping {path.name} and moving on.")
+            print(f"{e}. Skipping {documentPath.name} and moving on.")
 
         except ExtensionError as e:
             ''' Certain filetypes aren't added to the KG. For now, only pdf files are supported. TODO: add other filetype functionality later? '''
-            print(f"{e}. Skipping {path.name} and moving on.")
+            print(f"{e}. Skipping {documentPath.name} and moving on.")
 
         except ShouldNotOccurError as e:
             ''' Used when the function reaches a code block that it should never reach. '''
-            print(f"{e}. Skipping {path.name} and moving on.")
-
-    return cqAnswers
+            print(f"{e}. Skipping {documentPath.name} and moving on.")
 
 async def answerCQs(documentPath : Path, answerPath : Path, questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> None:
     ''' 
@@ -83,7 +85,8 @@ async def answerCQs(documentPath : Path, answerPath : Path, questionList : list[
 
 if __name__ == "__main__":
     '''
-    If we want to get CQs answered directly from this file, we can do that (mostly for debugging purposes).
+    If we want to get CQs answered directly from this file, we can do that.
+    NOTE: this is mostly for debugging purposes and shouldn't be used in the actual program.
     The below parser has the same logic as the subparser in main, but relocated here for convenience.
     '''
 
@@ -99,4 +102,4 @@ if __name__ == "__main__":
 
     arguments : Namespace = parser.parse_args()
 
-    answerCQsInPath(arguments)
+    run(answerCQsInPath(arguments.paths))
