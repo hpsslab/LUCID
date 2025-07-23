@@ -11,7 +11,7 @@ if __name__ == "__main__":
     '''
 
     parser : ArgumentParser = ArgumentParser(prog = "main.py", 
-                                             usage = "python3 main.py add {filepath|folderpath}+ | python3 main.py query",
+                                             usage = "python3 main.py [options] add {filepath|folderpath}+ | python3 main.py query",
                                              description = "The main program. Functionality includes adding CQ answers to the KG and querying a LLM based on a KG.")
 
     subparsers : _SubParsersAction = parser.add_subparsers(title = "Main subcommands",
@@ -42,6 +42,17 @@ if __name__ == "__main__":
                             metavar = "llm",
                             choices = ["gemini"],
                             help = "The LLM to use when adding articles to the KG.")
+    
+    ''' A parser to decide which embedding model to use. '''
+    parser.add_argument('--embed',
+                        type = str,
+                        nargs = '?',
+                        const = None,
+                        default = "bert",
+                        action = "store",
+                        metavar = "embed",
+                        choices = ["bert", "scibert"],
+                        help = "The LLM to use when embedding text (for the KG or for the query).")
 
     add_parser.add_argument("paths", 
                             type = Path, 
@@ -65,7 +76,7 @@ if __name__ == "__main__":
     '''
 
     if arguments.option == "add":
-        run(addPathsToKG(arguments.paths, arguments.llm))
+        run(addPathsToKG(arguments.paths, arguments.llm, arguments.embed))
     
         exit(0)
 
