@@ -63,21 +63,10 @@ async def answerCQs(documentPath : Path, answerPath : Path, questionList : list[
         with pymupdf.open(documentPath) as doc:
             paper : str = chr(10).join([page.get_text() for page in doc])
         
-        print(f"Answering {documentPath.name} CQs.")
-        await sleep(len(documentPath.name))
-        print(f"Answered {documentPath.name} CQs.")
-
         ''' construct the prompt with the necessary details. '''
         prompt : str = "Answer each of the following questions for the provided paper: \n" + chr(10).join(questionList) + "\nPaper:\n" + paper
         
-        '''
-        response : str = gemini.generate(prompt)
-        '''
-        response : str = prompt
-
-        # write to file
-        with answerPath.open('w') as out:
-            out.write(response)
+        await gemini.agenerate(prompt, answerPath)
 
     else:
         ''' For now, don't let the program work properly if we get a non pdf document passed in. '''

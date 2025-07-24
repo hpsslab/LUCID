@@ -3,6 +3,7 @@ from sys import exit
 from pathlib import Path
 from argparse import ArgumentParser, _SubParsersAction, Namespace
 from addToKG import addPathsToKG
+from exceptions.snoError import ShouldNotOccurError
 
 if __name__ == "__main__":
     '''
@@ -44,7 +45,7 @@ if __name__ == "__main__":
                             help = "The LLM to use when adding articles to the KG.")
     
     ''' A parser to decide which embedding model to use. '''
-    parser.add_argument('--embed',
+    add_parser.add_argument('--embed',
                         type = str,
                         nargs = '?',
                         const = None,
@@ -94,5 +95,5 @@ if __name__ == "__main__":
 
 
     else:
-        print("SNO: Invalid option provided. Exiting program.")
+        raise ShouldNotOccurError()
         exit(1)

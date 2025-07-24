@@ -14,19 +14,19 @@ from transformers import AutoTokenizer
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.graph_stores.simple_labelled import SimplePropertyGraphStore
 from llama_index.core.vector_stores.simple import SimpleVectorStore
-from llama_index.core import PropertyGraphIndex, Settings, StorageContext, load_index_from_storage
+from llama_index.core import PropertyGraphIndex, Settings, StorageContext, Document, load_index_from_storage
 from llama_index.core.node_parser import TokenTextSplitter
 from llama_index.core.indices.property_graph import SchemaLLMPathExtractor
 from llama_index.llms.google_genai import GoogleGenAI
 
 def initializeKG(llmChoice : str, embedChoice : str) -> any:
     ''' Create LLM depending on argument. '''
-    llm = None
+    llm : Any = None
     
     if llmChoice == "gemini":
         config : ConfigParser = ConfigParser()
         
-        config.read('config.cfg')
+        config.read('./gemini/config.cfg')
         
         '''
         Use the LlamaIndex LLM constructors to create our LLM to construct a KG with. 
@@ -40,7 +40,7 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
             vertexai_config: credentials to use if we want to use via VertexAI (provided a dictionary containing a project id and a location).
             http_options: HTTP options for the LLM requests. 
             See https://github.com/googleapis/python-genai/blob/main/google/genai/types.py#L1247 for more.
-            debug_config: options that make it easier to debug (ie: use cached content so that you don't charge for every call).
+            debug_config: options that make it easier to debug (ie: use cached content so that you don't get charged for every LLM call).
             See https://github.com/googleapis/python-genai/blob/main/google/genai/client.py#L89 for more.
             generation_config: configuration instructions on how to generate the response. Not using for now, change later if model not performing.
             See https://github.com/googleapis/python-genai/blob/main/google/genai/types.py#L3766 for more.
@@ -68,41 +68,16 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
 
     else:
         raise ShouldNotOccurError()
-
-    '''
-    Use the schema that we defined to extract our necessary information to construct the KG.
-    Ask the LLM to extract KG triples from the CQ answers.
-    Parameters:
-        llm: the LLM to prompt to extract the entities and relations from the CQ answers.
-        extract_prompt: the prompt to feed the LLM with to extract everything. 
-        I think the default prompt that the library uses will work fine, but we can add more context to the prompt later if necessary.
-        possible_entities & possible_relations: the entities/relations in our schema.
-        possible_entity_props & possible_relation_props: a list of properties that we would want to extract about a given entity/relation.
-        Leaving as None for now unless we want specific information later (would probably need to alter our approach too).
-        kg_validation_schema: rules defining which entities can pair with which relations.
-        strict: must we stick to this schema or can the LLM define new attributes?
-        num_workers: the amount of parallel jobs we use to do everything.
-        max_triplets_per_chunk: how many KG triplets can we make from each chunk from the document?
-    '''
-    kgExtractor : SchemaLLMPathExtractor = SchemaLLMPathExtractor(
-        llm = llm,
-        extract_prompt = None,            
-        possible_entities = ENTITIES,
-        possible_entity_props = None,
-        possible_relations = RELATIONS,
-        possible_relation_props = None,
-        kg_validation_schema = VALIDATION_SCHEMA,
-        strict = True,
-        num_workers = 4,
-        max_triplets_per_chunk = 10
-    )
     
     ''' 
-    Create embedding model based on argument. 
+    Create embedding model based on arguments. 
     NOTE: embedding model should be a SentenceTransformer when filtering on HuggingFace so the model gets along with LlamaIndex.
     '''
-    embeddingModel : llama_index.embeddings = None
-    tokenizer : transformers.models = None
+    embeddingModel : Any = None
+    tokenizer : Any = None
+    queryInstruction : str = "Represent the query for KG retrieval: " 
+    cqInstruction : str = "Represent the document for KG construction: "
+    embeddingBatchSize : int = 8
     
     if embedChoice == "bert":
         ''' 
@@ -141,10 +116,10 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         embeddingModel : HuggingFaceEmbedding = HuggingFaceEmbedding(
             model_name = bertHuggingFacePath,
             max_length = None,
-            query_instruction = "Represent the query for KG retrieval: ",
-            text_instruction = "Represent the document for KG construction: ",
+            query_instruction = queryInstruction,
+            text_instruction = cqInstruction,
             normalize = True,
-            embed_batch_size = 8,
+            embed_batch_size = embeddingBatchSize,
             cache_folder = bertModelPath,
             trust_remote_code = False,
             device = None,
@@ -191,10 +166,10 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         embeddingModel : HuggingFaceEmbedding = HuggingFaceEmbedding(
             model_name = scibertHuggingFacePath,
             max_length = None,
-            query_instruction = "Represent the query for KG retrieval: ",
-            text_instruction = "Represent the document for KG construction: ",
+            query_instruction = queryInstruction,
+            text_instruction = cqInstruction,
             normalize = True,
-            embed_batch_size = 8,
+            embed_batch_size = embeddingBatchSize,
             cache_folder = scibertModelPath,
             trust_remote_code = False,
             device = None,
@@ -206,10 +181,6 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         
     else:
         raise ShouldNotOccurError()
-    
-    ''' Set the LlamaIndex embedding model and LLM to the ones we just created. '''
-    Settings.embed_model = embeddingModel
-    Settings.llm = llm
 
     '''
     How we will split up CQ answers into parsable chunks (aka nodes) to process chunks into KG triplets for the future KG.
@@ -227,7 +198,7 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         include_prev_next_rel: whether or not to include how one chunk is related to the previous/next chunks.
         id_func: a function that generates chunk ids from a static variable.
     '''
-    transformation = TokenTextSplitter(
+    transformation : TokenTextSplitter = TokenTextSplitter(
         chunk_size = 128,
         chunk_overlap = 16,
         tokenizer = tokenizer,
@@ -239,10 +210,44 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         include_prev_next_rel = True,
         id_func = None
     )
+    
+    ''' Set the LlamaIndex embedding model, LLM, tokenizer, and CQ parser to the ones we just created. '''
+    Settings.embed_model = embeddingModel
+    Settings.llm = llm
+    Settings.tokenizer = tokenizer
+    Settings.node_parser = transformation
+
+    '''
+    Use the schema that we defined to extract our necessary information to construct the KG.
+    Ask the LLM to extract KG triples from the CQ answers.
+    Parameters:
+        llm: the LLM to prompt to extract the entities and relations from the CQ answers.
+        extract_prompt: the prompt to feed the LLM with to extract everything.
+        I think the default prompt that the library uses will work fine, but we can add more context to the prompt later if necessary.
+        possible_entities & possible_relations: the entities/relations in our schema.
+        possible_entity_props & possible_relation_props: a list of properties that we would want to extract about a given entity/relation.
+        Leaving as None for now unless we want specific information later (would probably need to alter our approach too).
+        kg_validation_schema: rules defining which entities can pair with which relations.
+        strict: must we stick to this schema or can the LLM define new attributes?
+        num_workers: the amount of parallel jobs we use to do everything.
+        max_triplets_per_chunk: how many KG triplets can we make from each chunk from the document?
+    '''
+    kgExtractor : SchemaLLMPathExtractor = SchemaLLMPathExtractor(
+        llm = llm,
+        extract_prompt = None,
+        possible_entities = ENTITIES,
+        possible_entity_props = None,
+        possible_relations = RELATIONS,
+        possible_relation_props = None,
+        kg_validation_schema = VALIDATION_SCHEMA,
+        strict = True,
+        num_workers = 4,
+        max_triplets_per_chunk = 10
+    )
 
     '''
     Now, we can create the knowledge graph object that the LLM agent will eventually query from.
-    NOTE: check for existance before we create a new object.
+    NOTE: check for existence (and load from memory instead) before we create a new object.
     Parameters:
         nodes: a list of nodes to add to the KG from the beginning. We want to add as we answer CQs, so we set to empty list.
         llm: the LLM that the KG will utilize to extract triplets that are relevant to the query.
@@ -254,8 +259,7 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         embed_kg_nodes: whether or not to embed KG nodes.
         callback_manager: used if we want to manage the asynchronous flow of the program within LlamaIndex.
         transformations: how to divide the source content (ie: the CQ answers) into pieces for the LLM to process.
-        I chose the SentenceSplitter since we already logically split up ideas using the CQ approach.
-        TODO: use tokenizer instead and test that out?
+        I chose the TokenTextSplitter since we already logically split up ideas using the CQ approach and defined a tokenizer earlier.
         storage_context: the context in which the KG will be stored (used so recreation is easier upon multiple runs).
         show_progress: whether or not to show a progress bar when adding to the KG.
     '''
@@ -265,7 +269,7 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
     if not Path(kgStoragePath).exists():
         ''' 
         Set vector and graph databases to default memory based implementations for now and create storage context for easy reloads later.
-        TODO: add credentials for a different type of databse to improve functionality?
+        TODO: add credentials for a different type of database to improve functionality?
         '''
         property_graph_store : SimplePropertyGraphStore = SimplePropertyGraphStore()
         vector_store : SimpleVectorStore = SimpleVectorStore()
@@ -295,7 +299,7 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
     
     else:
         ''' We can just load everything in if we have already run the program before. '''
-        print(f"Loading KG from {kgStoragePath}")
+        print(f"Loading KG from {kgStoragePath}.")
         storage_context : StorageContext = StorageContext.from_defaults(persist_dir = kgStoragePath)
         propertyGraph : PropertyGraphIndex = load_index_from_storage(storage_context)
     
@@ -369,18 +373,20 @@ async def addPathsToKG(pathList : list[Path], llmChoice : str, embedChoice : str
     ''' Make a lock that every asynchronous process can share once we start executing. Can't have race conditions when doing DB ops. '''
     databaseLock : Lock = Lock()
     
+    print("Constructing KG.")
     ''' Make our knowledge graph. '''
     async with databaseLock:
         try:
-            knowledgeGraph = initializeKG(llmChoice, embedChoice)
+            knowledgeGraph : PropertyGraphIndex = initializeKG(llmChoice, embedChoice)
         
         except KeyError as e:
             print(f"KeyError: {e} not set.")
-
+    print("Finished KG construction.")
+    
     ''' Asynchronously execute the process of adding each path into the knowledge graph, making sure exceptions don't stop the entire execution. '''
-    await gather(*(addPathToKG(path, databaseLock) for path in pathList), return_exceptions = True)
+    await gather(*(addPathToKG(path, databaseLock, knowledgeGraph) for path in pathList), return_exceptions = True)
 
-async def addPathToKG(documentPath: Path, lock : Lock, databasePath : Path = Path("databases"), cqAnswerPath : Path = Path("cq_answers"), parsedPath : Path = Path("parsed_cq_answers")) -> None:
+async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyGraphIndex, databasePath : Path = Path("databases"), cqAnswerPath : Path = Path("cq_answers"), parsedPath : Path = Path("parsed_cq_answers")) -> None:
     ''' Takes in an individual path and adds the associated article to the KG. '''
 
     ''' Make sure passed document exists before anything. Code is definitely ugly, but it'll do for now. '''
@@ -390,7 +396,7 @@ async def addPathToKG(documentPath: Path, lock : Lock, databasePath : Path = Pat
     
     except FileNotFoundError as e:
         print(f"{e}. Skipping {documentPath.name} and moving on.")
-    
+   
     if documentPath.is_file():
         ''' Add article to KG, base case. '''
         try:
@@ -400,14 +406,11 @@ async def addPathToKG(documentPath: Path, lock : Lock, databasePath : Path = Pat
            
             ''' 
             Make sure file isn't already in KG. Add to our DB that it is if we are adding to KG for the first time. 
-            Make sure folder where CQ answers and parsed CQ answers will be put exist too.
+            Make sure folder where CQ answers will be put exists too.
             '''
             async with lock:
                 if not cqAnswerPath.exists():
                     cqAnswerPath.mkdir()
-
-                if not parsedPath.exists():
-                    parsedPath.mkdir()
 
                 if not databasePath.exists():
                     databasePath.mkdir()
@@ -418,13 +421,33 @@ async def addPathToKG(documentPath: Path, lock : Lock, databasePath : Path = Pat
                 raise DuplicateError(documentPath.name)
 
             else:
-                ''' These are the paths where the LLM will store its answers to the CQs and parse the CQs into JSONs respectively. '''
+                ''' This is the path where the LLM will store its answers to the CQs. '''
                 currentCQAnswerPath : Path = Path(cqAnswerPath.joinpath(f"{documentPath.stem}_answers.txt"))
-                currentParsedAnswerPath : Path = Path(parsedPath.joinpath(f"{documentPath.stem}_answers.json"))
                 
+                ''' Answer CQs and pass those answers into the method that creates triples and inserts them into the KG. '''
+                '''
+                print(f"Answering CQs for document {documentPath.stem}.")
                 await answerCQs(documentPath, currentCQAnswerPath)
-                await parseCQAnswers(currentCQAnswerPath, currentParsedAnswerPath)
-        
+                print(f"CQs have been answered for document {documentPath.stem}.")
+                '''
+
+                with open(currentCQAnswerPath, "r") as cqFile:
+                    cqAnswers : str = cqFile.read()
+                
+                print(f"Adding document {documentPath.stem} to the KG.")
+                
+                cqAnswerDocument : Document = Document(
+                    text = cqAnswers,
+                    metadata={"filename": documentPath.stem, "doc_id": hashDocument(documentPath)}
+                )
+                print(f"Document for {documentPath.stem} made.")
+                propertyGraph.insert(cqAnswerDocument)
+
+                print(f"Added document {documentPath.stem} to the KG.")
+                
+                ''' Make sure to save our changes. '''
+                propertyGraph.storage_context.persist("./kgStorage")
+            
         except ExtensionError as e:
             ''' 
             Certain filetypes aren't allowed to be a DB/KG file (only .txt and .pdf for now respectively). 
@@ -451,7 +474,7 @@ async def addPathToKG(documentPath: Path, lock : Lock, databasePath : Path = Pat
             GOAL: add each file in the directory into the KG asynchronously.
             NOTE: loop through files only. Looping through directories leads to double counting (walk() recursively traverses directories). 
             '''
-            await gather(*(addPathToKG(root.joinpath(file), lock) for file in files), return_exceptions = True)
+            await gather(*(addPathToKG(root.joinpath(file), lock, propertyGraph) for file in files), return_exceptions = True)
     
     else:
         raise ShouldNotOccurError() 

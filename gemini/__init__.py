@@ -2,6 +2,7 @@ from google.generativeai import configure
 from google.generativeai.generative_models import GenerativeModel
 from google.generativeai.types import HarmCategory, HarmBlockThreshold, GenerationConfig
 from os import environ
+from pathlib import Path
 from configparser import ConfigParser
 import asyncio
 
@@ -10,7 +11,7 @@ config : ConfigParser = ConfigParser()
 
 ''' Read in the configuration of the model. '''
 try:
-    config.read('config.cfg')
+    config.read('./gemini/config.cfg')
 except FileNotFoundError as e:
     print(f"{e}.")
 
@@ -26,8 +27,8 @@ except KeyError as e:
 model : GenerativeModel = GenerativeModel(model_name="gemini-2.0-flash", system_instruction=sysInstruction)
 
 # send a request to the model and return the text response
-def generate(input, mime=None, schema=None):
-    res = model.generate_content(
+def generate(input : str, answerPath : Path, mime = None, schema = None) -> None:
+    res : GenerateContentResponse = model.generate_content(
         input,
         generation_config = GenerationConfig(
             temperature=temp,
@@ -40,13 +41,14 @@ def generate(input, mime=None, schema=None):
         stream = False
     )
     
-    print(f"Response is of type {type(res)}")
-    
-    return res.text
+    with open(answerPath, 'w') as outputFile:
+        outputFile.write(res.text)
+
+    return
 
 # send a request to the model and return the text response (asynchronous version)
-async def agenerate(input, mime=None, schema=None):
-    res = await model.generate_content_async(
+async def agenerate(input : str, answerPath : Path, mime=None, schema=None):
+    res : AsyncGenerateContentResponse = await model.generate_content_async(
         input,
         generation_config = GenerationConfig(
             temperature=temp,
@@ -59,6 +61,7 @@ async def agenerate(input, mime=None, schema=None):
         stream = False
     )
 
-    print(f"Asynchronous response is of type: {type(res)}")
-    
-    return res.text
+    with open(answerPath, 'w') as outputFile:
+        outputFile.write(res.text)
+
+    return
