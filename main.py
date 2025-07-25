@@ -12,7 +12,7 @@ if __name__ == "__main__":
     '''
 
     parser : ArgumentParser = ArgumentParser(prog = "main.py", 
-                                             usage = "python3 main.py [options] add {filepath|folderpath}+ | python3 main.py query",
+                                             usage = "python3 main.py add [options] {filepath|folderpath}+ | python3 main.py query",
                                              description = "The main program. Functionality includes adding CQ answers to the KG and querying a LLM based on a KG.")
 
     subparsers : _SubParsersAction = parser.add_subparsers(title = "Main subcommands",
@@ -49,7 +49,7 @@ if __name__ == "__main__":
                         type = str,
                         nargs = '?',
                         const = None,
-                        default = "bert",
+                        default = "scibert",
                         action = "store",
                         metavar = "embed",
                         choices = ["bert", "scibert"],

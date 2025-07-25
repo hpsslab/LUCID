@@ -301,8 +301,16 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         ''' We can just load everything in if we have already run the program before. '''
         print(f"Loading KG from {kgStoragePath}.")
         storage_context : StorageContext = StorageContext.from_defaults(persist_dir = kgStoragePath)
-        propertyGraph : PropertyGraphIndex = load_index_from_storage(storage_context)
-    
+        propertyGraph : PropertyGraphIndex = load_index_from_storage(storage_context,
+            llm = llm,
+            kg_extractors = [kgExtractor],
+            use_async = True,
+            embed_model = embeddingModel,
+            embed_kg_nodes = True,
+            callback_manager = None,
+            transformations = [transformation],
+            show_progress = False)
+
     return propertyGraph
 
 def hashDocument(documentPath : Path) -> str:
@@ -384,9 +392,9 @@ async def addPathsToKG(pathList : list[Path], llmChoice : str, embedChoice : str
     print("Finished KG construction.")
     
     ''' Asynchronously execute the process of adding each path into the knowledge graph, making sure exceptions don't stop the entire execution. '''
-    await gather(*(addPathToKG(path, databaseLock, knowledgeGraph) for path in pathList), return_exceptions = True)
+    await gather(*(addPathToKG(path, databaseLock, knowledgeGraph, llmChoice) for path in pathList), return_exceptions = True)
 
-async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyGraphIndex, databasePath : Path = Path("databases"), cqAnswerPath : Path = Path("cq_answers"), parsedPath : Path = Path("parsed_cq_answers")) -> None:
+async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyGraphIndex, llmChoice : str, databasePath : Path = Path("databases"), cqAnswerPath : Path = Path("cq_answers"), parsedPath : Path = Path("parsed_cq_answers")) -> None:
     ''' Takes in an individual path and adds the associated article to the KG. '''
 
     ''' Make sure passed document exists before anything. Code is definitely ugly, but it'll do for now. '''
@@ -425,25 +433,22 @@ async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyG
                 currentCQAnswerPath : Path = Path(cqAnswerPath.joinpath(f"{documentPath.stem}_answers.txt"))
                 
                 ''' Answer CQs and pass those answers into the method that creates triples and inserts them into the KG. '''
-                '''
+                ''' 
                 print(f"Answering CQs for document {documentPath.stem}.")
-                await answerCQs(documentPath, currentCQAnswerPath)
+                await answerCQs(documentPath, currentCQAnswerPath, llmChoice)
                 print(f"CQs have been answered for document {documentPath.stem}.")
                 '''
 
                 with open(currentCQAnswerPath, "r") as cqFile:
                     cqAnswers : str = cqFile.read()
                 
-                print(f"Adding document {documentPath.stem} to the KG.")
-                
+                print(f"Adding document {documentPath} to the KG.")
                 cqAnswerDocument : Document = Document(
                     text = cqAnswers,
                     metadata={"filename": documentPath.stem, "doc_id": hashDocument(documentPath)}
                 )
-                print(f"Document for {documentPath.stem} made.")
-                propertyGraph.insert(cqAnswerDocument)
-
-                print(f"Added document {documentPath.stem} to the KG.")
+                await propertyGraph.ainsert(cqAnswerDocument)
+                print(f"Added document {documentPath} to the KG.")
                 
                 ''' Make sure to save our changes. '''
                 propertyGraph.storage_context.persist("./kgStorage")
@@ -474,7 +479,7 @@ async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyG
             GOAL: add each file in the directory into the KG asynchronously.
             NOTE: loop through files only. Looping through directories leads to double counting (walk() recursively traverses directories). 
             '''
-            await gather(*(addPathToKG(root.joinpath(file), lock, propertyGraph) for file in files), return_exceptions = True)
+            await gather(*(addPathToKG(root.joinpath(file), lock, propertyGraph, llmChoice) for file in files), return_exceptions = True)
     
     else:
         raise ShouldNotOccurError() 
@@ -512,7 +517,7 @@ if __name__ == "__main__":
                         type = str,
                         nargs = '?',
                         const = None,
-                        default = "bert",
+                        default = "scibert",
                         action = "store",
                         metavar = "embed",
                         choices = ["bert", "scibert"],

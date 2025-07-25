@@ -46,7 +46,7 @@ async def answerCQsInPath(documentPaths : list[Path], cqAnswerPath : Path = Path
             ''' Used when the function reaches a code block that it should never reach. '''
             print(f"{e}. Skipping {documentPath.name} and moving on.")
 
-async def answerCQs(documentPath : Path, answerPath : Path, questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> None:
+async def answerCQs(documentPath : Path, answerPath : Path, llmChoice : str, questionList : list[str] = cq.COMPETENCY_QUESTIONS) -> None:
     ''' 
     Takes in:
     1. a path to an article 
@@ -66,8 +66,12 @@ async def answerCQs(documentPath : Path, answerPath : Path, questionList : list[
         ''' construct the prompt with the necessary details. '''
         prompt : str = "Answer each of the following questions for the provided paper: \n" + chr(10).join(questionList) + "\nPaper:\n" + paper
         
-        await gemini.agenerate(prompt, answerPath)
-
+        if llmChoice == "gemini":
+            await gemini.agenerate(prompt, answerPath)
+        
+        else:
+            raise ShouldNotOccurError()
+    
     else:
         ''' For now, don't let the program work properly if we get a non pdf document passed in. '''
         raise ShouldNotOccurError()
