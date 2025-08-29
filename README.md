@@ -18,7 +18,7 @@ Defines the schema for the project to use.
 - `python qa.py <filepath|folderpath>+`
 ### Answer Parsing
 - Generates a JSON object based on the provided CQ answers and the ontology defined in *schema.py*. Does this recursively for directory paths and asynchronously.
-- `python parse.py <filepath|folderpath>+'
+- `python parse.py <filepath|folderpath>+`
 ### Analyze
 - Compares 2 JSON objects, generating a *similarity metric* between 0 and 1 for each field. Also provides an explanation for the metric.
 - `python analyze.py <object1> <object2>`
@@ -54,8 +54,8 @@ Defines the schema for the project to use.
 ## Usage
 ### Add Files/Directories to KG
 - Adds each filepath (or recursively adds everything in a directory) to the KG. Does this asynchronously. Only works on PDFs for now.
-- 'python3 main.py add [options] <path>+'
+- `python3 main.py add [options] <path>+`
 
 ### Query a LLM using a KG
 - Queries a LLM using the knowledge graph that has been constructed.
-- 'python3 main.py query [options]'
+- `python3 main.py query [options]`
