@@ -48,3 +48,4 @@ Defines the JSON schema and LLM prompt used by *parse.py*.
 ### Compare the similarity of 2 sets of similarity scores
 - Calculates the average difference and other statistics between 2 data sets.
 - `python compareValues.py <Grid1> <Grid2>`
+

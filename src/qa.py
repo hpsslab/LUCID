@@ -1,5 +1,5 @@
 import pymupdf
-import gemini
+from llms import gemini
 import cq
 from asyncio import run, gather, sleep
 from exceptions.extensionError import ExtensionError

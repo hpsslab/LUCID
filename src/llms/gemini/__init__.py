@@ -1,7 +1,7 @@
 from google.generativeai import configure
 from google.generativeai.generative_models import GenerativeModel
 from google.generativeai.types import HarmCategory, HarmBlockThreshold, GenerationConfig
-from os import environ
+from os import environ, getcwd
 from pathlib import Path
 from configparser import ConfigParser
 import asyncio
@@ -11,7 +11,7 @@ config : ConfigParser = ConfigParser()
 
 ''' Read in the configuration of the model. '''
 try:
-    config.read('./gemini/config.cfg')
+    config.read('./src/llms/gemini/config.cfg')
 except FileNotFoundError as e:
     print(f"{e}.")
 

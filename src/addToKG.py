@@ -1,220 +1,52 @@
 from asyncio import run, gather, Lock
 from pathlib import Path
-from os import environ
-from configparser import ConfigParser
 from schema import ENTITIES, RELATIONS, VALIDATION_SCHEMA
 from qa import answerCQs
-from parse import parseCQAnswers
 from xxhash import xxh128
+from constructors.llm_constructor import constructLLM
+from constructors.embedding_model_constructor import constructEmbeddingModel
 from exceptions.extensionError import ExtensionError
 from exceptions.snoError import ShouldNotOccurError
 from exceptions.duplicateError import DuplicateError
 from argparse import ArgumentParser, Namespace
-from transformers import AutoTokenizer
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.graph_stores.simple_labelled import SimplePropertyGraphStore
 from llama_index.core.vector_stores.simple import SimpleVectorStore
 from llama_index.core import PropertyGraphIndex, Settings, StorageContext, Document, load_index_from_storage
-from llama_index.core.node_parser import TokenTextSplitter
+from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.core.indices.property_graph import SchemaLLMPathExtractor
-from llama_index.llms.google_genai import GoogleGenAI
+
+''' CONSTANTS '''
+KG_STORAGE_PATH : str = "./kg_storage"
+ACCEPTABLE_DOCUMENT_EXTENSIONS : set([str]) = {".pdf"}
 
 def initializeKG(llmChoice : str, embedChoice : str) -> any:
     ''' Create LLM depending on argument. '''
-    llm : Any = None
-    
-    if llmChoice == "gemini":
-        config : ConfigParser = ConfigParser()
-        
-        config.read('./gemini/config.cfg')
-        
-        '''
-        Use the LlamaIndex LLM constructors to create our LLM to construct a KG with. 
-        Parameters:
-            model: which Gemini model should we use?
-            api_key: credentials to use the model.
-            temperature: how much 'freedom' should the model have to vary its output?
-            max_tokens: how many tokens is the limit for model outputs?
-            context_window: the context window of the model.
-            max_retries: how many times should the API retry if an API error takes place?
-            vertexai_config: credentials to use if we want to use via VertexAI (provided a dictionary containing a project id and a location).
-            http_options: HTTP options for the LLM requests. 
-            See https://github.com/googleapis/python-genai/blob/main/google/genai/types.py#L1247 for more.
-            debug_config: options that make it easier to debug (ie: use cached content so that you don't get charged for every LLM call).
-            See https://github.com/googleapis/python-genai/blob/main/google/genai/client.py#L89 for more.
-            generation_config: configuration instructions on how to generate the response. Not using for now, change later if model not performing.
-            See https://github.com/googleapis/python-genai/blob/main/google/genai/types.py#L3766 for more.
-            callback_manager: used if we want to manage the asynchronous flow of the program within LlamaIndex.
-            is_function_calling_model: does the model call functions (as tools) as a RAG source?
-            cached_content: a cache object if we want to cache objects that the LLM will use multiple times.
-            The goal here is to provide CQ answers to the model and have the LLM create triplets for a knowledge graph (once per set of CQ answers),
-            so caching won't be necessary for this particular model.
-        '''
-        llm : GoogleGenAI = GoogleGenAI(
-            model = "gemini-2.0-flash",
-            api_key = environ["GEMINI_API_KEY"],
-            temperature = float(config['gemini']['Temperature']),
-            max_tokens = 8192,
-            context_window = 1048576,
-            max_retries = 3,
-            vertexai_config = None,
-            http_options = None, 
-            debug_config = None,
-            generation_config = None,
-            callback_manager = None,
-            is_function_calling_model = False,
-            cached_content = None 
-        )
+    llm : BaseLLM = constructLLM(llmChoice) 
 
-    else:
-        raise ShouldNotOccurError()
-    
-    ''' 
-    Create embedding model based on arguments. 
-    NOTE: embedding model should be a SentenceTransformer when filtering on HuggingFace so the model gets along with LlamaIndex.
-    '''
-    embeddingModel : Any = None
-    tokenizer : Any = None
-    queryInstruction : str = "Represent the query for KG retrieval: " 
-    cqInstruction : str = "Represent the document for KG construction: "
-    embeddingBatchSize : int = 8
-    
-    if embedChoice == "bert":
-        ''' 
-        Initialize all relevant paths into variables. 
-        Construct model/tokenizer from uncased version (ie: "science" is the same as "Science") and base version (ie: not the larger model). 
-        '''
-        bertTokenizerPath : str = "./bert_tokenizer"
-        bertModelPath : str = "./bert_model"
-        bertHuggingFacePath : str = "inokufu/bert-base-uncased-xnli-sts-finetuned-education"
-
-        if not Path(bertTokenizerPath).exists():
-            print(f"Loading BERT tokenizer and saving to {bertTokenizerPath}.")
-        
-        tokenizer : transformers.models.bert.tokenization_bert_fast.BertTokenizerFast = AutoTokenizer.from_pretrained(bertHuggingFacePath, cache_dir = bertTokenizerPath)
-
-        if not Path(bertModelPath).exists():
-            print(f"Loading BERT model and saving to {bertModelPath}.")
-        
-        '''
-        Construct the embedding model that we will use to extract relevant feature information from text samples (ie: query or CQ answers).
-        Parameters:
-            model_name: the name of the model to use from HuggingFace.
-            max_length: the maximum length input that should be embedded. Sticking with default value here.
-            query_instruction: the prompt to apply to the query before embedding it.
-            text_instruction: the prompt to apply to CQ answers before embedding them.
-            normalize: whether or not to normalize the embedding vectors. Set to true since magnitude of vectors won't matter in cosine similarity.
-            embed_batch_size: the size of the batch to use when calculating embeddings.
-            cache_folder: a folder to cache the retrieved model files to so we don't need to reload multiple times from HuggingFace.
-            trust_remote_code: whether or not to trust public HuggingFace code to run.
-            device: the devices to use for the computation (ie: "cpu", "cuda", "npu", etc.). Setting to None so it can dynamically figure this out.
-            callback_manager: used if we want to manage the asynchronous flow of the program within LlamaIndex.
-            parallel_process: whether or not to execute the embedding process in parallel.
-            target_devices: the actual devices to use. None means it uses device parameter to actually determine which cores to target.
-            show_progress_bar: whether or not to show a progress bar upon making the model.
-        '''
-        embeddingModel : HuggingFaceEmbedding = HuggingFaceEmbedding(
-            model_name = bertHuggingFacePath,
-            max_length = None,
-            query_instruction = queryInstruction,
-            text_instruction = cqInstruction,
-            normalize = True,
-            embed_batch_size = embeddingBatchSize,
-            cache_folder = bertModelPath,
-            trust_remote_code = False,
-            device = None,
-            callback_manager = None,
-            parallel_process = True, 
-            target_devices = None,
-            show_progress_bar = False
-        )
-
-    elif embedChoice == "scibert":
-        '''
-        Initialize all relevant paths into variables.
-        Construct model/tokenizer from uncased version (ie: "science" is the same as "Science").
-        '''
-        scibertTokenizerPath : str = "./scibert_tokenizer"
-        scibertModelPath : str = "./scibert_model"
-        scibertHuggingFacePath : str = "jordyvl/scibert_scivocab_uncased_sentence_transformer"
-
-        if not Path(scibertTokenizerPath).exists():
-            print(f"Loading SciBERT tokenizer and saving to {scibertTokenizerPath}.")
-
-        tokenizer : transformers.models.bert.tokenization_bert_fast.BertTokenizerFast = AutoTokenizer.from_pretrained(scibertHuggingFacePath, cache_dir = scibertTokenizerPath)
-
-        if not Path(scibertModelPath).exists():
-            print(f"Loading SciBERT model and saving to {scibertModelPath}.")
-
-        '''
-        Construct the embedding model that we will use to extract relevant feature information from text samples (ie: query or CQ answers).
-        Parameters:
-            model_name: the name of the model to use from HuggingFace.
-            max_length: the maximum length input that should be embedded. Sticking with default value here.
-            query_instruction: the prompt to apply to the query before embedding it.
-            text_instruction: the prompt to apply to CQ answers before embedding them.
-            normalize: whether or not to normalize the embedding vectors. Set to true since magnitude of vectors won't matter in cosine similarity.
-            embed_batch_size: the size of the batch to use when calculating embeddings.
-            cache_folder: a folder to cache the retrieved model files to so we don't need to reload multiple times from HuggingFace.
-            trust_remote_code: whether or not to trust public HuggingFace code to run.
-            device: the devices to use for the computation (ie: "cpu", "cuda", "npu", etc.). Setting to None so it can dynamically figure this out.
-            callback_manager: used if we want to manage the asynchronous flow of the program within LlamaIndex.
-            parallel_process: whether or not to execute the embedding process in parallel.
-            target_devices: the actual devices to use. None means it uses device parameter to actually determine which cores to target.
-            show_progress_bar: whether or not to show a progress bar upon making the model.
-        '''
-        embeddingModel : HuggingFaceEmbedding = HuggingFaceEmbedding(
-            model_name = scibertHuggingFacePath,
-            max_length = None,
-            query_instruction = queryInstruction,
-            text_instruction = cqInstruction,
-            normalize = True,
-            embed_batch_size = embeddingBatchSize,
-            cache_folder = scibertModelPath,
-            trust_remote_code = False,
-            device = None,
-            callback_manager = None,
-            parallel_process = True,
-            target_devices = None,
-            show_progress_bar = False
-        )
-        
-    else:
-        raise ShouldNotOccurError()
+    ''' Create embedding model based on argument. '''
+    embeddingModel : BaseEmbedding = constructEmbeddingModel(embedChoice)
 
     '''
     How we will split up CQ answers into parsable chunks (aka nodes) to process chunks into KG triplets for the future KG.
     Parameters:
-        chunk_size: how many tokens should be stored in each chunk that is processed?
-        Not making too large since most CQ answers are only a sentence or two long.
-        chunk_overlap: how many tokens should overlap from chunk to chunk?
-        tokenizer: the tokenizer to use to tokenize the CQ answers.
-        Tokenizer should match the embedding model.
-        callback_manager: used if we want to manage the asynchronous flow of the program within LlamaIndex.
-        separator: the primary character that divides words from one another.
-        backup_separators: a list of other characters that could be used to divide words from one another.
-        keep_whitespaces: whether or not to keep whitespace when chunking the CQ answers.
-        include_metadata: whether or not to consider metadata when chunking CQ answers.
-        include_prev_next_rel: whether or not to include how one chunk is related to the previous/next chunks.
-        id_func: a function that generates chunk ids from a static variable.
+        buffer_size: the number of sentences to group together when evaluating semantic similarity. Consider each sentence individually for now.
+        embed_model: the embedding model to use.
+        sentence_splitter: how to split text into sentences. Uses default method provided by library.
+        include_metadata: whether to include the metadata of the text in nodes.
+        include_prev_next_rel: whether to include prev/next relationships between nodes.
+        breakpoint_percentile_threshold: the percent dissimilarity required between sentences to form different nodes.
     '''
-    transformation : TokenTextSplitter = TokenTextSplitter(
-        chunk_size = 128,
-        chunk_overlap = 16,
-        tokenizer = tokenizer,
-        callback_manager = None,
-        separator = " ",
-        backup_separators = ["\n"],
-        keep_whitespaces = False,
+    transformation : SemanticSplitterNodeParser = SemanticSplitterNodeParser(
+        buffer_size = 1,
+        embed_model = embeddingModel,
         include_metadata = False,
         include_prev_next_rel = True,
-        id_func = None
+        breakpoint_percentile_threshold = 95
     )
     
-    ''' Set the LlamaIndex embedding model, LLM, tokenizer, and CQ parser to the ones we just created. '''
+    ''' Set the LlamaIndex embedding model, LLM, and CQ parser to the ones we just created. '''
     Settings.embed_model = embeddingModel
     Settings.llm = llm
-    Settings.tokenizer = tokenizer
     Settings.node_parser = transformation
 
     '''
@@ -222,13 +54,15 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
     Ask the LLM to extract KG triples from the CQ answers.
     Parameters:
         llm: the LLM to prompt to extract the entities and relations from the CQ answers.
-        extract_prompt: the prompt to feed the LLM with to extract everything.
+        extract_prompt: the prompt to feed the LLM with to extract everything. Using default for now.
         I think the default prompt that the library uses will work fine, but we can add more context to the prompt later if necessary.
         possible_entities & possible_relations: the entities/relations in our schema.
         possible_entity_props & possible_relation_props: a list of properties that we would want to extract about a given entity/relation.
         Leaving as None for now unless we want specific information later (would probably need to alter our approach too).
+        kg_schema_cls: a class that represents our schema. Letting LlamaIndex create the class for now but might look into this later.
         kg_validation_schema: rules defining which entities can pair with which relations.
         strict: must we stick to this schema or can the LLM define new attributes?
+        NOTE: this current version does not stick to the schema very well (TODO: fix later), so strict = true will filter out a lot of triplets.
         num_workers: the amount of parallel jobs we use to do everything.
         max_triplets_per_chunk: how many KG triplets can we make from each chunk from the document?
     '''
@@ -239,8 +73,8 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         possible_entity_props = None,
         possible_relations = RELATIONS,
         possible_relation_props = None,
-        kg_validation_schema = VALIDATION_SCHEMA,
-        strict = True,
+        kg_validation_schema = {"relationships": VALIDATION_SCHEMA},
+        strict = False,
         num_workers = 4,
         max_triplets_per_chunk = 10
     )
@@ -258,15 +92,12 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         embed_model: the model that the KG will use to embed nodes and queries. 
         embed_kg_nodes: whether or not to embed KG nodes.
         callback_manager: used if we want to manage the asynchronous flow of the program within LlamaIndex.
-        transformations: how to divide the source content (ie: the CQ answers) into pieces for the LLM to process.
-        I chose the TokenTextSplitter since we already logically split up ideas using the CQ approach and defined a tokenizer earlier.
+        transformations: how to divide the source content (ie: the CQ answers) into pieces for the LLM to process aka the earlier SemanticSplitter.
         storage_context: the context in which the KG will be stored (used so recreation is easier upon multiple runs).
         show_progress: whether or not to show a progress bar when adding to the KG.
     '''
 
-    kgStoragePath : str = "./kg_storage"
-
-    if not Path(kgStoragePath).exists():
+    if not Path(KG_STORAGE_PATH).exists():
         ''' 
         Set vector and graph databases to default memory based implementations for now and create storage context for easy reloads later.
         TODO: add credentials for a different type of database to improve functionality?
@@ -291,16 +122,13 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
             callback_manager = None,
             transformations = [transformation],
             storage_context = storage_context,
-            show_progress = False
+            show_progress = True
         )
-        
-        print(f"Storing KG information in {kgStoragePath}.")
-        propertyGraph.storage_context.persist(kgStoragePath)
     
     else:
         ''' We can just load everything in if we have already run the program before. '''
-        print(f"Loading KG from {kgStoragePath}.")
-        storage_context : StorageContext = StorageContext.from_defaults(persist_dir = kgStoragePath)
+        print(f"Loading KG from {KG_STORAGE_PATH}.")
+        storage_context : StorageContext = StorageContext.from_defaults(persist_dir = KG_STORAGE_PATH)
         propertyGraph : PropertyGraphIndex = load_index_from_storage(storage_context,
             llm = llm,
             kg_extractors = [kgExtractor],
@@ -309,7 +137,8 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
             embed_kg_nodes = True,
             callback_manager = None,
             transformations = [transformation],
-            show_progress = False)
+            show_progress = True
+        )
 
     return propertyGraph
 
@@ -382,13 +211,17 @@ async def addPathsToKG(pathList : list[Path], llmChoice : str, embedChoice : str
     databaseLock : Lock = Lock()
     
     print("Constructing KG.")
+    
     ''' Make our knowledge graph. '''
-    async with databaseLock:
-        try:
-            knowledgeGraph : PropertyGraphIndex = initializeKG(llmChoice, embedChoice)
+    try:
+        knowledgeGraph : PropertyGraphIndex = initializeKG(llmChoice, embedChoice)
         
-        except KeyError as e:
-            print(f"KeyError: {e} not set.")
+    except KeyError as e:
+        print(f"KeyError: {e} not set.")
+
+    except ShouldNotOccurError as e:
+        print(f"SNO Error: {e}.")
+
     print("Finished KG construction.")
     
     ''' Asynchronously execute the process of adding each path into the knowledge graph, making sure exceptions don't stop the entire execution. '''
@@ -409,7 +242,7 @@ async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyG
         ''' Add article to KG, base case. '''
         try:
             ''' We are only adding .pdf files into our corpus for now. TODO: add more later? '''
-            if documentPath.suffix not in {".pdf"}:
+            if documentPath.suffix not in ACCEPTABLE_DOCUMENT_EXTENSIONS:
                 raise ExtensionError(documentPath.suffix, "knowledge graph")
            
             ''' 
@@ -433,25 +266,27 @@ async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyG
                 currentCQAnswerPath : Path = Path(cqAnswerPath.joinpath(f"{documentPath.stem}_answers.txt"))
                 
                 ''' Answer CQs and pass those answers into the method that creates triples and inserts them into the KG. '''
-                ''' 
+                 
                 print(f"Answering CQs for document {documentPath.stem}.")
                 await answerCQs(documentPath, currentCQAnswerPath, llmChoice)
                 print(f"CQs have been answered for document {documentPath.stem}.")
-                '''
 
                 with open(currentCQAnswerPath, "r") as cqFile:
                     cqAnswers : str = cqFile.read()
                 
                 print(f"Adding document {documentPath} to the KG.")
+
                 cqAnswerDocument : Document = Document(
                     text = cqAnswers,
                     metadata={"filename": documentPath.stem, "doc_id": hashDocument(documentPath)}
                 )
+
                 await propertyGraph.ainsert(cqAnswerDocument)
+
                 print(f"Added document {documentPath} to the KG.")
                 
                 ''' Make sure to save our changes. '''
-                propertyGraph.storage_context.persist("./kgStorage")
+                propertyGraph.storage_context.persist(KG_STORAGE_PATH)
             
         except ExtensionError as e:
             ''' 
@@ -517,10 +352,10 @@ if __name__ == "__main__":
                         type = str,
                         nargs = '?',
                         const = None,
-                        default = "scibert",
+                        default = "gemini",
                         action = "store",
                         metavar = "embed",
-                        choices = ["bert", "scibert"],
+                        choices = ["bert", "scibert", "gemini"],
                         help = "The LLM to use when embedding text (for the KG or for the query).")
 
     arguments : Namespace = parser.parse_args()
