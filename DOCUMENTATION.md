@@ -25,7 +25,10 @@
 - Something to think about; should we just serialize this instead ans get rid of this entirely?
 
 4. KG Extractor (how do we extract triplets from our CQ answer text samples?)
-- TODO: write more detail here.
+- GOAL: ask LLM to take in our CQ answers and generate "maxtripletsperchunk" triplets for our KG.
+- TODO: play with the "maxtripletsperchunk" parameter. I think it's probably too high right now, leading to some nonsense triplets. 
+- TODO: figure out the ideal amount of triplets per chunk.
+- Pass the LLM our schema (as defined in schema.py) and use those "rules" to generate relevant triplets.
 - TODO: it seems like the LLM treats our schema as more of a suggestion (as opposed to a requirement), look into this?
 
 5. Check memory and see if we already make a KG (would be the path at KGSTORAGEPATH, as seen by the constant in addToKG.py#L19).
