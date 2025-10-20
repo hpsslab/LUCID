@@ -16,8 +16,16 @@ from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.core.indices.property_graph import SchemaLLMPathExtractor
 
 ''' CONSTANTS '''
-KG_STORAGE_PATH : str = "./kg_storage"
+KG_STORAGE_PATH : str = "./../kg_storage"
+PARSED_CQ_ANSWER_PATH : str = "./../parsed_cq_answers"
+CQ_ANSWER_PATH : str = "./../cq_answers"
+DATABASE_PATH : str = "./../databases"
 ACCEPTABLE_DOCUMENT_EXTENSIONS : set([str]) = {".pdf"}
+
+def getPath(relative_path : str) -> Path:
+    """ Converts a path to be relative to this file. """
+    currentDirectory : Path = Path(__file__).resolve().parent
+    return Path(currentDirectory / relative_path).resolve()
 
 def initializeKG(llmChoice : str, embedChoice : str) -> any:
     ''' Create LLM depending on argument. '''
@@ -97,7 +105,7 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
         show_progress: whether or not to show a progress bar when adding to the KG.
     '''
 
-    if not Path(KG_STORAGE_PATH).exists():
+    if not getPath(KG_STORAGE_PATH).exists():
         ''' 
         Set vector and graph databases to default memory based implementations for now and create storage context for easy reloads later.
         TODO: add credentials for a different type of database to improve functionality?
@@ -128,7 +136,7 @@ def initializeKG(llmChoice : str, embedChoice : str) -> any:
     else:
         ''' We can just load everything in if we have already run the program before. '''
         print(f"Loading KG from {KG_STORAGE_PATH}.")
-        storage_context : StorageContext = StorageContext.from_defaults(persist_dir = KG_STORAGE_PATH)
+        storage_context : StorageContext = StorageContext.from_defaults(persist_dir = getPath(KG_STORAGE_PATH))
         propertyGraph : PropertyGraphIndex = load_index_from_storage(storage_context,
             llm = llm,
             kg_extractors = [kgExtractor],
@@ -227,7 +235,17 @@ async def addPathsToKG(pathList : list[Path], llmChoice : str, embedChoice : str
     ''' Asynchronously execute the process of adding each path into the knowledge graph, making sure exceptions don't stop the entire execution. '''
     await gather(*(addPathToKG(path, databaseLock, knowledgeGraph, llmChoice) for path in pathList), return_exceptions = True)
 
-async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyGraphIndex, llmChoice : str, databasePath : Path = Path("databases"), cqAnswerPath : Path = Path("cq_answers"), parsedPath : Path = Path("parsed_cq_answers")) -> None:
+    ''' Make sure to save our changes. '''
+    knowledgeGraph.storage_context.persist(getPath(KG_STORAGE_PATH))
+
+async def addPathToKG(documentPath: Path, 
+                      lock : Lock, 
+                      propertyGraph : PropertyGraphIndex, 
+                      llmChoice : str, 
+                      databasePath : Path = getPath(DATABASE_PATH), 
+                      cqAnswerPath : Path = getPath(CQ_ANSWER_PATH), 
+                      parsedPath : Path = getPath(PARSED_CQ_ANSWER_PATH)
+                      ) -> None:
     ''' Takes in an individual path and adds the associated article to the KG. '''
 
     ''' Make sure passed document exists before anything. Code is definitely ugly, but it'll do for now. '''
@@ -257,7 +275,7 @@ async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyG
                     databasePath.mkdir()
                 
                 inKG : bool = isInKG(documentPath, Path(databasePath.joinpath("kgContents.txt")))
-
+            
             if inKG:
                 raise DuplicateError(documentPath.name)
 
@@ -266,9 +284,8 @@ async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyG
                 currentCQAnswerPath : Path = Path(cqAnswerPath.joinpath(f"{documentPath.stem}_answers.txt"))
                 
                 ''' Answer CQs and pass those answers into the method that creates triples and inserts them into the KG. '''
-                 
                 print(f"Answering CQs for document {documentPath.stem}.")
-                await answerCQs(documentPath, currentCQAnswerPath, llmChoice)
+                #await answerCQs(documentPath, currentCQAnswerPath, llmChoice)
                 print(f"CQs have been answered for document {documentPath.stem}.")
 
                 with open(currentCQAnswerPath, "r") as cqFile:
@@ -280,14 +297,13 @@ async def addPathToKG(documentPath: Path, lock : Lock, propertyGraph : PropertyG
                     text = cqAnswers,
                     metadata={"filename": documentPath.stem, "doc_id": hashDocument(documentPath)}
                 )
-
+                
+                print(cqAnswers)
+                
                 await propertyGraph.ainsert(cqAnswerDocument)
 
                 print(f"Added document {documentPath} to the KG.")
                 
-                ''' Make sure to save our changes. '''
-                propertyGraph.storage_context.persist(KG_STORAGE_PATH)
-            
         except ExtensionError as e:
             ''' 
             Certain filetypes aren't allowed to be a DB/KG file (only .txt and .pdf for now respectively). 

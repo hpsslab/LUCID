@@ -40,10 +40,10 @@ sed -i '202s/^\(\s*\)/\1await /' $PG_FILE
 # Make text embeddings run asynchronously
 sed -i '257d' $PG_FILE
 sed -i '260d' $PG_FILE
-sed -i '257s/^\(\s*\)/\1await /' $PG_FILE
+sed -i '257s/^\(\s*\)/\1embeddings = await /' $PG_FILE
 
 # Make KG embeddings run asynchronously
 sed -i '272d' $PG_FILE
 sed -i '275d' $PG_FILE
-sed -i '272s/^\(\s*\)/\1await /' $PG_FILE
+sed -i '272s/^\(\s*\)/\1kg_embeddings = await /' $PG_FILE
 
