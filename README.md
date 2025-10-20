@@ -5,6 +5,8 @@
 - `source venv/bin/activate` 
 - Set the `GEMINI_API_KEY` environment variable to your [Gemini API key](https://aistudio.google.com/app/apikey).
 - Use `export GEMINI_API_KEY=[paste_key_here]` to set your key once in vm
+- Run `setup.sh` bash script to make sure library works as expected
+
 ## Configuration
 ### CQ.py
 Contains the list of competency questions.
