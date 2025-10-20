@@ -285,7 +285,7 @@ async def addPathToKG(documentPath: Path,
                 
                 ''' Answer CQs and pass those answers into the method that creates triples and inserts them into the KG. '''
                 print(f"Answering CQs for document {documentPath.stem}.")
-                #await answerCQs(documentPath, currentCQAnswerPath, llmChoice)
+                await answerCQs(documentPath, currentCQAnswerPath, llmChoice)
                 print(f"CQs have been answered for document {documentPath.stem}.")
 
                 with open(currentCQAnswerPath, "r") as cqFile:
@@ -297,8 +297,6 @@ async def addPathToKG(documentPath: Path,
                     text = cqAnswers,
                     metadata={"filename": documentPath.stem, "doc_id": hashDocument(documentPath)}
                 )
-                
-                print(cqAnswers)
                 
                 await propertyGraph.ainsert(cqAnswerDocument)
 
